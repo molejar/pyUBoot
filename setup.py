@@ -21,7 +21,7 @@ sys.path.insert(0, './src')
 import uboot
 
 setup(
-    name='PyUBoot',
+    name='uboot',
     version=uboot.__version__,
     license='Apache 2.0',
     author='Martin Olejar',
@@ -39,7 +39,7 @@ setup(
         'Topic :: Software Development :: Embedded Systems',
         'Topic :: Utilities'
     ],
-    description='U-Boot Image Tools',
+    description='Open Source library for manipulating with U-Boot images and environment variables',
     py_modules=['mkenv', 'mkimg'],
     entry_points={
         'console_scripts': [

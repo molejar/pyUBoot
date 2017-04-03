@@ -697,10 +697,12 @@ class ScriptImage(BaseImage):
         self._cmds[key] = value
 
     def GetInfo(self):
+        i = 0
         msg  = super().GetInfo()
         msg += 'Content:       {0:d} Commands\n'.format(len(self._cmds))
         for val in self._cmds:
-            msg += "- {}\n".format(val)
+            msg += "{0:3d}) {1:s}\n".format(i, val)
+            i = i + 1
         return msg
 
     def AddCmd(self, name, value):
@@ -984,12 +986,12 @@ if __name__ == "__main__":
     # print created image info
     print(mimg.GetInfo())
     # create temp dir
-    os.makedirs("../temp", exist_ok=True)
+    os.makedirs("../../temp", exist_ok=True)
     # save created image into file
-    with open("../temp/aax.img", "wb") as f:
+    with open("../../temp/aax.img", "wb") as f:
         f.write(mimg.Export())
     # load image from file
-    with open("../temp/aax.img", "rb") as f:
+    with open("../../temp/aax.img", "rb") as f:
         data = f.read()
     # parse binary blob
     img = parse(data)

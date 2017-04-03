@@ -6,8 +6,8 @@ PyUBoot is an Open Source python based library for manipulating with U-Boot imag
 Dependencies
 ------------
 
-- Python 3.x interpreter
-- [click](http://click.pocoo.org/6) - A Python "Command Line Interface Creation Kit"
+- [Python 3](https://www.python.org) - The interpreter
+- [Click](http://click.pocoo.org/6) - Python package for creating beautiful command line interface.
 
 Installation
 ------------
@@ -36,7 +36,7 @@ You can also install from source by executing in shell the following commands:
 Usage
 -----
 
-The following example is showing how to use `uboot` module in your code.
+The first example is showing how to use `EnvBlob` class from `uboot` module in your code.
 
 ``` python
 
@@ -50,23 +50,27 @@ The following example is showing how to use `uboot` module in your code.
     env.SetEnv("bootdelay", "3")
     env.SetEnv("stdin", "serial")
     env.SetEnv("stdout", "serial")
-    ...
+
     # --------------------------------------------------------------------------------
     # save env blob as "TXT" and "BIN" file
     # --------------------------------------------------------------------------------
     env.Save("env.txt")
     env.Save("env.img")
-    # --------------------------------------------------------------------------------
-    # save env blob as "BIN" file with specified file type
-    # --------------------------------------------------------------------------------
+    # file type must be specified if file name doesn't have ".txt" or ".img" extension
     env.Save("env", type="img")
 
     # --------------------------------------------------------------------------------
-    # open env blob
+    # open and parse env blob from binary file: env
     # --------------------------------------------------------------------------------
     env.Open("env", type="img")
-    print(env)
+    print(env) # print env blob info
+```
 
+The second example is showing how to create Multi-File U-Boot image with `uboot` module.
+
+``` python
+
+    import uboot
     # --------------------------------------------------------------------------------
     # create dummy firmware image (u-boot executable image)
     # --------------------------------------------------------------------------------
@@ -105,27 +109,24 @@ The following example is showing how to use `uboot` module in your code.
                             compress=uboot.COMPRESSType.NONE)
     mimg.Append(fwimg)
     mimg.Append(scimg)
-    # print created image info
-    print(mimg.GetInfo())
+    print(mimg) # print created image info
 
     # --------------------------------------------------------------------------------
-    # save created image into file
+    # save created image into file: uboot_mimg.img
     # --------------------------------------------------------------------------------
     with open("uboot_mimg.img", "wb") as f:
         f.write(mimg.Export())
 
     # --------------------------------------------------------------------------------
-    # load image from file
+    # load image from file: uboot_mimg.img
     # --------------------------------------------------------------------------------
     with open("uboot_mimg.img", "rb") as f:
         data = f.read()
-    # parse binary blob
     img = uboot.parse(data)
-    # print info
-    print(img.GetInfo())
+    print(img)  # print parsed image info
 ```
 
-PyUBoot is distributed with two command-line utilities: [mkimg](doc/mkimg.md) and [mkenv](doc/mkenv.md).
+PyUBoot is distributed with two command-line utilities (tools): [mkimg](doc/mkimg.md) and [mkenv](doc/mkenv.md).
 
 TODO
 ----

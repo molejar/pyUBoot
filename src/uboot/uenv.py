@@ -262,17 +262,17 @@ if __name__ == "__main__":
     env.SetEnv("bootcmd", "run loadfdt; run loadimg; bootz ${imgaddr} - ${fdtaddr};")
 
     # create temp dir
-    os.makedirs("../temp", exist_ok=True)
+    os.makedirs("../../temp", exist_ok=True)
 
     # save test file
-    env.Save("../temp/env.txt")
-    env.Save("../temp/env.img")
-    env.Save("../temp/env", type="img")
+    env.Save("../../temp/env.txt")
+    env.Save("../../temp/env.img")
+    env.Save("../../temp/env", type="img")
 
     # open test file
-    env.Open("../temp/env", type="img")
+    env.Open("../../temp/env", type="img")
     print(env)
-    env.Open("../temp/env.txt")
+    env.Open("../../temp/env.txt")
     print(env)
-    env.Open("../temp/env.img")
+    env.Open("../../temp/env.img")
     print(env)
