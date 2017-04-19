@@ -364,7 +364,7 @@ class Header(object):
     @Name.setter
     def Name(self, value):
         assert type(value) is str, "HEADER: Name must be a string"
-        assert len(value) <= 32, "HEADER: Name to long: %d" % value
+        assert len(value) <= 32, "HEADER: Name to long: %d char instead 32" % len(value)
         self._name = value
 
     def _crc(self):
@@ -747,8 +747,6 @@ class ScriptImage(BaseImage):
             raise Exception("Image: No data to export !")
 
         data = '\n'.join(self._cmds).encode('utf-8')
-
-        # TODO: Check image format for script type
         data = pack('!2L', len(data), 0) + data
 
         self._header.DataSize = len(data)
@@ -829,7 +827,7 @@ class MultiImage(BaseImage):
         n = 0
         for img in self._img:
             msg += '#IMAGE[' + str(n) + ']\n'
-            msg += str(img.GetInfo())
+            msg += img.GetInfo()
             n += 1
         return msg
 

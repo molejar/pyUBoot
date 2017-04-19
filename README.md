@@ -1,7 +1,7 @@
-PyUBoot
+pyUBoot
 =======
 
-PyUBoot is an Open Source python based library for manipulating with U-Boot images and environment variables.
+pyUBoot is an Open Source python based library for manipulating with U-Boot images and environment variables.
 
 Dependencies
 ------------
@@ -15,21 +15,21 @@ Installation
 To install the latest development version (master branch) execute in shell the following command:
 
 ``` bash
-    $ pip install --pre -U https://github.com/molejar/PyUBoot/archive/master.zip
+    $ pip install --pre -U https://github.com/molejar/pyUBoot/archive/master.zip
 ```
 
 NOTE: you may run into permissions issues running these commands.
 You have a few options here:
 
-1. Run with `sudo -H` to install PyUBoot and dependencies globally
+1. Run with `sudo -H` to install pyUBoot and dependencies globally
 2. Specify the `--user` option to install local to your user
 3. Run the command in a [virtualenv](https://virtualenv.pypa.io/en/latest/) local to a specific project working set.
 
 You can also install from source by executing in shell the following commands:
 
 ``` bash
-    $ git clone https://github.com/molejar/PyUBoot.git
-    $ cd PyUBoot
+    $ git clone https://github.com/molejar/pyUBoot.git
+    $ cd pyUBoot
     $ python setup.py install
 ```
 
@@ -71,6 +71,7 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
 ``` python
 
     import uboot
+
     # --------------------------------------------------------------------------------
     # create dummy firmware image (u-boot executable image)
     # --------------------------------------------------------------------------------
@@ -126,7 +127,7 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
     print(img)  # print parsed image info
 ```
 
-PyUBoot is distributed with two command-line utilities (tools): [mkimg](doc/mkimg.md) and [mkenv](doc/mkenv.md).
+`pyUBoot` is distributed with two command-line utilities (tools): [mkimg](doc/mkimg.md) and [mkenv](doc/mkenv.md).
 
 TODO
 ----

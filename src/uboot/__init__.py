@@ -33,6 +33,6 @@ __all__ = [
     'IMGType',
     'COMPRESSType',
     # Methods
-    parse,
-    create,
+    'parse',
+    'create'
 ]
