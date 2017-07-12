@@ -244,31 +244,6 @@ class Header(object):
         (COMPRESSType.LZ4,   "lz4")
     )
 
-    def __init__(self, **kwargs):
-        """ U-Boot Image Header Constructor
-        :param laddr:    Load address
-        :param eaddr:    Entry point address
-        :param arch:     Architecture (ARCHType Enum)
-        :param os:       Operating system (OSType Enum)
-        :param image:    Image type (IMGType Enum)
-        :param compress: Image compression (COMPRESSType Enum)
-        :param name:     Image name (max: 32 chars)
-        """
-        self.MagicNumber  = 0x27051956  # U-Boot Default Value is 0x27051956
-        self.TimeStamp    = int(time.time())
-        self.DataSize     = 0
-        self.DataCRC      = 0
-        self.LoadAddress  = 0 if 'laddr' not in kwargs else kwargs['laddr']
-        self.EntryAddress = 0 if 'eaddr' not in kwargs else kwargs['eaddr']
-        self.OsType       = OSType.LINUX if 'os' not in kwargs else kwargs['os']
-        self.ArchType     = ARCHType.ARM if 'arch' not in kwargs else kwargs['arch']
-        self.ImageType    = IMGType.STD if 'image' not in kwargs else kwargs['image']
-        self.Compression  = COMPRESSType.NONE if 'compress' not in kwargs else kwargs['compress']
-        self.Name         = '' if 'name' not in kwargs else kwargs['name']
-
-    def __len__(self):
-        return self.SIZE
-
     @property
     def MagicNumber(self):
         return self._magicNumber
@@ -367,6 +342,51 @@ class Header(object):
         assert len(value) <= 32, "HEADER: Name to long: %d char instead 32" % len(value)
         self._name = value
 
+    @property
+    def size(self):
+        return self.SIZE
+
+    def __init__(self, **kwargs):
+        """ U-Boot Image Header Constructor
+        :param laddr:    Load address
+        :param eaddr:    Entry point address
+        :param arch:     Architecture (ARCHType Enum)
+        :param os:       Operating system (OSType Enum)
+        :param image:    Image type (IMGType Enum)
+        :param compress: Image compression (COMPRESSType Enum)
+        :param name:     Image name (max: 32 chars)
+        """
+        self.MagicNumber  = 0x27051956  # U-Boot Default Value is 0x27051956
+        self.TimeStamp    = int(time.time())
+        self.DataSize     = 0
+        self.DataCRC      = 0
+        self.LoadAddress  = 0 if 'laddr' not in kwargs else kwargs['laddr']
+        self.EntryAddress = 0 if 'eaddr' not in kwargs else kwargs['eaddr']
+        self.OsType       = OSType.LINUX if 'os' not in kwargs else kwargs['os']
+        self.ArchType     = ARCHType.ARM if 'arch' not in kwargs else kwargs['arch']
+        self.ImageType    = IMGType.STD if 'image' not in kwargs else kwargs['image']
+        self.Compression  = COMPRESSType.NONE if 'compress' not in kwargs else kwargs['compress']
+        self.Name         = '' if 'name' not in kwargs else kwargs['name']
+
+    def __len__(self):
+        return self.size
+
+    def __repr__(self):
+        msg = str()
+        msg += "Magic Number:  0x{0:08X}\n".format(self.MagicNumber)
+        msg += "Header CRC:    0x{0:08X}\n".format(self.HeaderCRC)
+        msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.TimeStamp)))
+        msg += "Data Size:     {0:.02f} kB\n".format(self.DataSize / 1024)
+        msg += "Load Address:  0x{0:08X}\n".format(self.LoadAddress)
+        msg += "Entry Address: 0x{0:08X}\n".format(self.EntryAddress)
+        msg += "Data CRC:      0x{0:08X}\n".format(self.DataCRC)
+        msg += "OS Type:       {0:s}\n".format(OSType.ValueToStr(self.OsType))
+        msg += "Arch Type:     {0:s}\n".format(ARCHType.ValueToStr(self.ArchType))
+        msg += "Image Type:    {0:s}\n".format(IMGType.ValueToStr(self.ImageType))
+        msg += "Compression:   {0:s}\n".format(COMPRESSType.ValueToStr(self.Compression))
+        msg += "Image Name:    {0:s}\n".format(self.Name)
+        return msg
+
     def _crc(self):
         header = pack(self.FORMAT,
                       self.MagicNumber,
@@ -383,7 +403,7 @@ class Header(object):
                       self.Name.encode('utf-8'))
         return CRC32(header)
 
-    def _getName(self, enum, value):
+    def _get_name(self, enum, value):
         def getn(nlist, value):
             for item in nlist:
                 if int(item[0]) == value:
@@ -404,23 +424,7 @@ class Header(object):
         name = getn(name_list, value)
         return name if name else enum.ValueToStr(value)
 
-    def __repr__(self):
-        msg = str()
-        msg += "Magic Number:  0x{0:08X}\n".format(self.MagicNumber)
-        msg += "Header CRC:    0x{0:08X}\n".format(self.HeaderCRC)
-        msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.TimeStamp)))
-        msg += "Data Size:     {0:.02f} kB\n".format(self.DataSize / 1024)
-        msg += "Load Address:  0x{0:08X}\n".format(self.LoadAddress)
-        msg += "Entry Address: 0x{0:08X}\n".format(self.EntryAddress)
-        msg += "Data CRC:      0x{0:08X}\n".format(self.DataCRC)
-        msg += "OS Type:       {0:s}\n".format(OSType.ValueToStr(self.OsType))
-        msg += "Arch Type:     {0:s}\n".format(ARCHType.ValueToStr(self.ArchType))
-        msg += "Image Type:    {0:s}\n".format(IMGType.ValueToStr(self.ImageType))
-        msg += "Compression:   {0:s}\n".format(COMPRESSType.ValueToStr(self.Compression))
-        msg += "Image Name:    {0:s}\n".format(self.Name)
-        return msg
-
-    def GetInfo(self):
+    def info(self):
         msg  = "Image Name:    {0:s}\n".format(self.Name)
         msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.TimeStamp)))
         msg += "Image Type:    {0:s} {1:s} {2:s} ({3:s})\n".format(ARCHType.ValueToStr(self.ArchType),
@@ -433,7 +437,7 @@ class Header(object):
         msg += "Entry Address: 0x{0:08X}\n".format(self.EntryAddress)
         return msg
 
-    def Parse(self, data, offset=0):
+    def parse(self, data, offset=0):
         if len(data) < self.SIZE:
             raise Exception("Header: Too small size of input data !")
 
@@ -456,7 +460,7 @@ class Header(object):
 
         return self.SIZE
 
-    def Export(self):
+    def export(self):
         header = pack(self.FORMAT,
                       self.MagicNumber,
                       self.HeaderCRC,
@@ -471,25 +475,6 @@ class Header(object):
                       self.Compression,
                       self.Name.encode('utf-8'))
         return header
-
-    @staticmethod
-    def GetImgType(data, offset=0, magic_number=0x27051956, itpos=30):
-
-        while True:
-            if (offset + Header.SIZE) > len(data):
-                raise Exception("Error: Not an U-Boot image !")
-
-            (header_mn, header_crc,) = unpack_from('!2L', data, offset)
-            if magic_number == header_mn:
-                header = bytearray(data[offset:offset+Header.SIZE])
-                header[4:8] = [0]*4
-                if header_crc == CRC32(header):
-                    break
-            offset += 4
-
-        (image_type,) = unpack_from('B', data, offset + itpos)
-
-        return image_type, offset
 # ----------------------------------------------------------------------------------------------------------------------
 
 
@@ -553,24 +538,18 @@ class BaseImage(object):
         self._header.Name = value
 
     def __repr__(self):
-        self.Export()
+        self.export()
         return str(self._header)
 
-    def GetInfo(self):
-        self.Export()
-        return self._header.GetInfo()
+    def info(self):
+        self.export()
+        return self._header.info()
 
-    def Import(self, data, offset=0):
-        pass
+    def parse(self, data, offset=0):
+        raise NotImplementedError()
 
-    def Export(self):
-        pass
-
-    def Load(self, data, type=None):
-        pass
-
-    def Extract(self):
-        pass
+    def export(self):
+        raise NotImplementedError()
 
 
 class StdImage(BaseImage):
@@ -586,9 +565,15 @@ class StdImage(BaseImage):
         :param name:     Image name (max: 32 chars)
         """
         super().__init__(**kwargs)
-        self._data = bytes()
-        if data:
-            self.Load(data)
+        self._data = data if data else bytearray()
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
 
     def __repr__(self):
         msg  = super().__repr__()
@@ -607,17 +592,17 @@ class StdImage(BaseImage):
     def __setitem__(self, key, value):
         self._data[key] = value
 
-    def GetInfo(self):
-        msg  = super().GetInfo()
+    def info(self):
+        msg  = super().info()
         msg += "Content:       Binary Blob ({0:d} Bytes)\n".format(len(self._data))
         return msg
 
-    def Import(self, data, offset=0):
+    def parse(self, data, offset=0):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
         """
-        offset += self._header.Parse(data, offset)
+        offset += self._header.parse(data, offset)
         if len(data[offset:]) < self._header.DataSize:
             raise Exception("Image: Too small size of input data !")
 
@@ -625,7 +610,7 @@ class StdImage(BaseImage):
         if CRC32(self._data) != self._header.DataCRC:
             raise Exception("Image: Uncorrect CRC of input data ")
 
-    def Export(self):
+    def export(self):
         """ Export the image into byte array. """
         if len(self._data) == 0:
             raise Exception("Image: No data to export !")
@@ -633,14 +618,7 @@ class StdImage(BaseImage):
         self._header.DataSize = len(self._data)
         self._header.DataCRC = CRC32(self._data)
 
-        return self._header.Export() + self._data
-
-    def Load(self, data, type=None):
-        assert isinstance(data, bytes)
-        self._data = data
-
-    def Extract(self):
-        return (self._header, self._data)
+        return self._header.export() + self._data
 
 
 class FwImage(StdImage):
@@ -660,9 +638,9 @@ class FwImage(StdImage):
 
 
 class ScriptImage(BaseImage):
-    def __init__(self, data=None, **kwargs):
+    def __init__(self, cmds=None, **kwargs):
         """ Script Image Constructor
-        :param data:     Image content as byte array
+        :param cmds:     List of commands
         :param laddr:    Load address
         :param eaddr:    Entry point address
         :param arch:     Architecture (ARCHType Enum)
@@ -671,11 +649,9 @@ class ScriptImage(BaseImage):
         :param name:     Image name (max: 32 chars)
         """
         super().__init__(**kwargs)
-        self._cmds = []
         # Set The Image Type to Script
         self._header.ImageType = IMGType.SCRIPT
-        if data:
-            self.Load(data)
+        self._cmds = cmds if cmds else []
 
     def __repr__(self):
         msg  = super().__repr__()
@@ -696,29 +672,33 @@ class ScriptImage(BaseImage):
     def __setitem__(self, key, value):
         self._cmds[key] = value
 
-    def GetInfo(self):
+    def info(self):
         i = 0
-        msg  = super().GetInfo()
+        msg  = super().info()
         msg += 'Content:       {0:d} Commands\n'.format(len(self._cmds))
         for val in self._cmds:
             msg += "{0:3d}) {1:s}\n".format(i, val)
-            i = i + 1
+            i += 1
         return msg
 
-    def AddCmd(self, name, value):
-        assert type(name) is str, "ScriptImage: Command name must be a string"
-        assert type(value) is str, "ScriptImage: Command value must be a string"
-        self._cmds.append("{0:s} {1:s}".format(name, value))
+    def append(self, cmd_name, cmd_value):
+        assert type(cmd_name) is str, "ScriptImage: Command name must be a string"
+        assert type(cmd_value) is str, "ScriptImage: Command value must be a string"
+        self._cmds.append("{0:s} {1:s}".format(cmd_name, cmd_value))
 
-    def Clear(self):
+    def pop(self, index):
+        assert 0 <= index < len(self._cmds)
+        return self._cmds.pop(index)
+
+    def clear(self):
         self._cmds.clear()
 
-    def Import(self, data, offset=0):
+    def parse(self, data, offset=0):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
         """
-        offset += self._header.Parse(data, offset)
+        offset += self._header.parse(data, offset)
         if len(data[offset:]) < self._header.DataSize:
             raise Exception("Image: Too small size of input data !")
 
@@ -741,7 +721,7 @@ class ScriptImage(BaseImage):
                 continue
             self._cmds.append(line)
 
-    def Export(self):
+    def export(self):
         """ Export the image into byte array. """
         if len(self._cmds) == 0:
             raise Exception("Image: No data to export !")
@@ -752,31 +732,23 @@ class ScriptImage(BaseImage):
         self._header.DataSize = len(data)
         self._header.DataCRC = CRC32(data)
 
-        return self._header.Export() + data
+        return self._header.export() + data
 
-    def Load(self, data, type=None):
-        if type is None:
-            type = 'txt' if isinstance(data, str) else 'list'
+    def load(self, data):
+        for line in data.split('\n'):
+            line = line.rstrip('\0')
+            if not line or line.startswith('#'):
+                continue
+            self._cmds.append(line)
 
-        if type is 'txt':
-            for line in data.split('\n'):
-                line = line.rstrip('\0')
-                if not line or line.startswith('#'):
-                    continue
-                self._cmds.append(line)
-        elif type == 'list':
-            self._cmds = data
-        else:
-            raise Exception("Unsupported type: %s !", type)
-
-    def Extract(self):
+    def save(self):
         return self._header, '\n'.join(self._cmds)
 
 
 class MultiImage(BaseImage):
-    def __init__(self, data=None, **kwargs):
+    def __init__(self, imgs=None, **kwargs):
         """ Multi Image Constructor
-        :param data:     The list of all images
+        :param imgs:     The list of all images
         :param laddr:    Load address
         :param eaddr:    Entry point address
         :param arch:     Architecture (ARCHType Enum)
@@ -785,65 +757,66 @@ class MultiImage(BaseImage):
         :param name:     Image name (max: 32 chars)
         """
         super().__init__(**kwargs)
-        self._img = []
         # Set Image Type as Multi in default
         self._header.ImageType = IMGType.MULTI
-        # Load attached images
-        if data:
-            self.Load(data)
+        self._imgs = imgs if imgs else []
 
     def __repr__(self):
-        self.Export()
+        self.export()
         msg = str(self._header)
-        msg += 'Content:       {0:d} Images\n'.format(len(self._img))
+        msg += 'Content:       {0:d} Images\n'.format(len(self._imgs))
         n = 0
-        for img in self._img:
+        for img in self._imgs:
             msg += '[ Image: ' + str(n) + ' ]\n'
             msg += str(img)
             n += 1
         return msg
 
     def __len__(self):
-        return len(self._img)
+        return len(self._imgs)
 
     def __iadd__(self, value):
-        self._img += value
+        self._imgs += value
 
     def __iter__(self):
-        return iter(self._img)
+        return iter(self._imgs)
 
     def __getitem__(self, key):
-        return self._img[key]
+        return self._imgs[key]
 
     def __setitem__(self, key, value):
-        self._img[key] = value
+        self._imgs[key] = value
 
     def __delitem__(self, key):
-        self._img.remove(key)
+        self._imgs.remove(key)
 
-    def GetInfo(self):
-        msg  = super().GetInfo()
-        msg += 'Content:       {0:d} Images\n'.format(len(self._img))
+    def info(self):
+        msg  = super().info()
+        msg += 'Content:       {0:d} Images\n'.format(len(self._imgs))
         n = 0
-        for img in self._img:
+        for img in self._imgs:
             msg += '#IMAGE[' + str(n) + ']\n'
-            msg += img.GetInfo()
+            msg += img.info()
             n += 1
         return msg
 
-    def Append(self, x):
-        assert isinstance(x, BaseImage), "MultiImage: Unsupported value"
-        self._img.append(x)
+    def append(self, image):
+        assert isinstance(image, BaseImage), "MultiImage: Unsupported value"
+        self._imgs.append(image)
 
-    def Clear(self):
-        self._img.clear()
+    def pop(self, index):
+        assert 0 <= index < len(self._imgs)
+        return self._imgs.pop(index)
 
-    def Import(self, data, offset=0):
+    def cear(self):
+        self._imgs.clear()
+
+    def parse(self, data, offset=0):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
         """
-        offset += self._header.Parse(data, offset)
+        offset += self._header.parse(data, offset)
 
         if len(data[offset:]) < self._header.DataSize:
             raise Exception("MultiImage: Too small size of input data !")
@@ -855,7 +828,7 @@ class MultiImage(BaseImage):
             raise Exception("MultiImage: Not a Multi Image Type !")
 
         # Clear Images list
-        self._img.clear()
+        self._imgs.clear()
 
         # Parse images lengths
         sList = []
@@ -867,21 +840,21 @@ class MultiImage(BaseImage):
 
         # Parse images itself
         for size in sList:
-            self._img.append(parse(data, offset))
+            self._imgs.append(parse_img(data, offset))
             offset += size
 
-    def Export(self):
+    def export(self):
         """ Export the image into byte array.
             :return
         """
         data = bytes()
         dlen = []
 
-        if len(self._img) == 0:
+        if len(self._imgs) == 0:
             raise Exception("MultiImage: No data to export !")
 
-        for img in self._img:
-            dimg = img.Export()
+        for img in self._imgs:
+            dimg = img.export()
             dlen.append(len(dimg))
             data += dimg
 
@@ -892,54 +865,61 @@ class MultiImage(BaseImage):
         self._header.DataSize = len(data)
         self._header.DataCRC = CRC32(data)
 
-        return self._header.Export() + data
-
-    def Load(self, data, type=None):
-        assert isinstance(data, (list, tuple))
-
-        if type is None:
-            type = 'obj' if isinstance(data[0], BaseImage) else 'bin'
-
-        if type == 'bin':
-            for image in data:
-                self._img.append(parse(image))
-        elif type == 'obj':
-            self._img = data
-        else:
-            raise Exception("Unsupported type: %s !", type)
-
-    def Extract(self):
-        return [img.Extract() for img in self._img]
+        return self._header.export() + data
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def create(imgType):
-    """ Help function for creating image
-    :param imgType:
-    :return:
+def get_img_type(data, offset=0, magic_number=0x27051956, itpos=30):
+    """ Help function for extracting image fom raw data
+    :param data: The raw data as byte array
+    :param offset: The offset
+    :param magic_number:
+    :return: Image type and offset where image start
     """
-    if imgType == int(IMGType.MULTI):
+    while True:
+        if (offset + Header.SIZE) > len(data):
+            raise Exception("Error: Not an U-Boot image !")
+
+        (header_mn, header_crc,) = unpack_from('!2L', data, offset)
+        if magic_number == header_mn:
+            header = bytearray(data[offset:offset+Header.SIZE])
+            header[4:8] = [0]*4
+            if header_crc == CRC32(header):
+                break
+        offset += 4
+
+    (image_type,) = unpack_from('B', data, offset + itpos)
+
+    return image_type, offset
+
+
+def new_img(img_type):
+    """ Help function for creating image
+    :param img_type:
+    :return: Image object
+    """
+    if img_type == int(IMGType.MULTI):
         img_obj = MultiImage()
-    elif imgType == int(IMGType.FIRMWARE):
+    elif img_type == int(IMGType.FIRMWARE):
         img_obj = FwImage()
-    elif imgType == int(IMGType.SCRIPT):
+    elif img_type == int(IMGType.SCRIPT):
         img_obj = ScriptImage()
     else:
-        img_obj = StdImage(image=imgType)
+        img_obj = StdImage(image=img_type)
 
     return img_obj
 
 
-def parse(data, offset=0, magic_number=0x27051956):
+def parse_img(data, offset=0, magic_number=0x27051956):
     """ Help function for extracting image fom raw data
     :param data: The raw data as byte array
     :param offset: The offset
     :param magic_number:
     :return: Image object
     """
-    (imgType, offset) = Header.GetImgType(bytearray(data), offset, magic_number)
-    imgObj = create(imgType)
-    imgObj.Import(data, offset)
+    (imgType, offset) = get_img_type(bytearray(data), offset, magic_number)
+    imgObj = new_img(imgType)
+    imgObj.parse(data, offset)
 
     return imgObj
 
@@ -967,11 +947,11 @@ if __name__ == "__main__":
     scimg.Compression = COMPRESSType.NONE
     scimg.EntryAddress = 0
     scimg.LoadAddress = 0
-    scimg.AddCmd("setenv", "loadaddr 00200000")
-    scimg.AddCmd("echo", "===== U-Boot settings =====")
-    scimg.AddCmd("setenv", "u-boot /tftpboot/TQM860L/u-boot.bin")
-    scimg.AddCmd("setenv", "u-boot_addr 40000000")
-    scimg.AddCmd("setenv", "load_u-boot 'tftp ${loadaddr} ${u-boot}'")
+    scimg.append("setenv", "loadaddr 00200000")
+    scimg.append("echo", "===== U-Boot settings =====")
+    scimg.append("setenv", "u-boot /tftpboot/TQM860L/u-boot.bin")
+    scimg.append("setenv", "u-boot_addr 40000000")
+    scimg.append("setenv", "load_u-boot 'tftp ${loadaddr} ${u-boot}'")
     # create multi-file image
     mimg = MultiImage(name="Multi-File Test Image",
                       laddr=0,
@@ -979,19 +959,19 @@ if __name__ == "__main__":
                       arch=ARCHType.ARM,
                       os=OSType.LINUX,
                       compress=COMPRESSType.NONE)
-    mimg.Append(fwimg)
-    mimg.Append(scimg)
+    mimg.append(fwimg)
+    mimg.append(scimg)
     # print created image info
-    print(mimg.GetInfo())
+    print(mimg.info())
     # create temp dir
     os.makedirs("../../temp", exist_ok=True)
     # save created image into file
     with open("../../temp/aax.img", "wb") as f:
-        f.write(mimg.Export())
+        f.write(mimg.export())
     # load image from file
     with open("../../temp/aax.img", "rb") as f:
         data = f.read()
     # parse binary blob
-    img = parse(data)
+    img = parse_img(data)
     # print info
-    print(img.GetInfo())
+    print(img.info())

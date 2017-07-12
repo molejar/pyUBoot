@@ -15,7 +15,7 @@ Installation
 To install the latest development version (master branch) execute in shell the following command:
 
 ``` bash
-    $ pip install --pre -U https://github.com/molejar/pyUBoot/archive/master.zip
+    $ pip3 install --pre -U https://github.com/molejar/pyUBoot/archive/master.zip
 ```
 
 NOTE: you may run into permissions issues running these commands.
@@ -30,7 +30,7 @@ You can also install from source by executing in shell the following commands:
 ``` bash
     $ git clone https://github.com/molejar/pyUBoot.git
     $ cd pyUBoot
-    $ python setup.py install
+    $ pip3 install .
 ```
 
 Usage
@@ -47,23 +47,24 @@ The first example is showing how to use `EnvBlob` class from `uboot` module in y
     # --------------------------------------------------------------------------------
     env = uboot.EnvBlob(name="U-Boot Variables")
     env.redundant = True
-    env.SetEnv("bootdelay", "3")
-    env.SetEnv("stdin", "serial")
-    env.SetEnv("stdout", "serial")
+    env.set("bootdelay", "3")
+    env.set("stdin", "serial")
+    env.set("stdout", "serial")
 
     # --------------------------------------------------------------------------------
-    # save env blob as "TXT" and "BIN" file
+    # save env blob into binary file
     # --------------------------------------------------------------------------------
-    env.Save("env.txt")
-    env.Save("env.img")
-    # file type must be specified if file name doesn't have ".txt" or ".img" extension
-    env.Save("env", type="img")
+    with open("env.img", 'wb') as f:
+        f.write(env.export())
 
     # --------------------------------------------------------------------------------
-    # open and parse env blob from binary file: env
+    # open and parse env blob from binary file
     # --------------------------------------------------------------------------------
-    env.Open("env", type="img")
-    print(env) # print env blob info
+    with open("env.img", 'rb') as f:
+        env.parse(f.read())
+
+    # print env blob info
+    print(env)
 ```
 
 The second example is showing how to create Multi-File U-Boot image with `uboot` module.
@@ -94,10 +95,10 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
     scimg.Compression = uboot.COMPRESSType.NONE
     scimg.EntryAddress = 0
     scimg.LoadAddress = 0
-    scimg.AddCmd("echo", "===== U-Boot settings =====")
-    scimg.AddCmd("setenv", "stdin serial")
-    scimg.AddCmd("setenv", "stdout serial")
-    scimg.AddCmd("setenv", "rootdev mmcblk2p2")
+    scimg.append("echo", "===== U-Boot settings =====")
+    scimg.append("setenv", "stdin serial")
+    scimg.append("setenv", "stdout serial")
+    scimg.append("setenv", "rootdev mmcblk2p2")
 
     # --------------------------------------------------------------------------------
     # create multi-file image
@@ -108,15 +109,15 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
                             arch=uboot.ARCHType.ARM,
                             os=uboot.OSType.LINUX,
                             compress=uboot.COMPRESSType.NONE)
-    mimg.Append(fwimg)
-    mimg.Append(scimg)
+    mimg.append(fwimg)
+    mimg.append(scimg)
     print(mimg) # print created image info
 
     # --------------------------------------------------------------------------------
     # save created image into file: uboot_mimg.img
     # --------------------------------------------------------------------------------
     with open("uboot_mimg.img", "wb") as f:
-        f.write(mimg.Export())
+        f.write(mimg.export())
 
     # --------------------------------------------------------------------------------
     # load image from file: uboot_mimg.img

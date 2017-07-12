@@ -21,6 +21,7 @@ import collections
 if sys.version_info[0] < 3:
     raise "Must be using Python 3"
 
+
 class EnvBlob(object):
     def __init__(self, name=None, size=8192, redundant=False, empty_value=0x00):
         self._name = name
@@ -70,59 +71,33 @@ class EnvBlob(object):
     def redundant(self, value):
         self._redundant = value
 
-    @property
-    def env(self):
-        return self._env
+    def get(self, name=None):
+        """ Get the value of u-boot environment variable. If name is None, get list of all variables
+            :param name: The variable name
+            :return The variable value
+        """
+        if name:
+            assert isinstance(name, str), "Error "
+            if not name in self._env:
+                raise Exception("ERROR: Env %s doesnt exist !" % name)
+            return self._env[name]
+        else:
+            return self._env.keys()
 
-    @env.setter
-    def env(self, value):
-        self._env = value
-
-    def GetEnv(self, name):
-        assert isinstance(name, str), "Error "
-        if not name in self._env:
-            raise Exception("ERROR: Env %s doesnt exist !" % name)
-        return self._env[name]
-
-    def SetEnv(self, name, value):
+    def set(self, name, value):
+        """ Set the u-boot environment variable.
+            :param name: The variable name
+            :param value: The variable value
+        """
         assert isinstance(name, str), "Error "
         if not isinstance(value, str):
             value = str(value)
         self._env[name] = value
 
-    def Load(self, data):
-        self._env = collections.OrderedDict()
-
-        for line in data.split('\n'):
-            line = line.rstrip('\0')
-            if not line: continue
-
-            if line.startswith('#'):
-                pass  # TODO: Parse init values
-            else:
-                key, value = line.split('=', 1)
-                self._env[key] = value
-
-    def Extract(self):
-        """ Extract the u-boot environment variables as string.
-            :return
-        """
-        ret = "# Name: {0:s}\n".format(self.name) if self.name else ""
-        ret += "# Size: {0:d}\n".format(self.size)
-        ret += "# Redundant: {0:s}\n".format("YES" if self.redundant else "NO")
-        ret += "\n"
-
-        for k in self._env:
-            ret += "{0:s}={1:s}\n".format(k, self._env[k])
-
-        return ret
-
-
-    def Import(self, data, offset=0, size=None):
-        """ Import the u-boot environment variables from bytearray.
-            :param data:
-            :param offset:
-            :param size:
+    def parse(self, data, offset=0):
+        """ Parse the u-boot environment variables from bytearray.
+            :param data: The data in bytes array
+            :param offset: The offset of input data
         """
         self._env = collections.OrderedDict()
 
@@ -138,7 +113,6 @@ class EnvBlob(object):
         if read_crc != calc_crc:
             raise ValueError("Wrong CRC")
 
-        if size: self.size = size
         read_data = read_data.decode('utf-8')
 
         for s in read_data.split('\0'):
@@ -147,13 +121,11 @@ class EnvBlob(object):
             key, value = s.split('=', 1)
             self._env[key] = value
 
-
-    def Export(self, size=None):
+    def export(self):
         """ Export the u-boot environment variables into bytearray.
-            :param size:
-            :return
+            :return The environment variables in bytearray
         """
-        env_size = self.size if not size else size
+        env_size = self.size
 
         if self._redundant:
             env_size -= 5
@@ -173,67 +145,11 @@ class EnvBlob(object):
         env_blob = env_blob.encode('utf-8')
         crc = binascii.crc32(env_blob) & 0xffffffff
 
-        if self._redundant:
-            ret = struct.pack("IB", crc, 0x01)
-        else:
-            ret = struct.pack("I", crc)
-
+        ret = struct.pack("IB", crc, 0x01) if self._redundant else struct.pack("I", crc)
         ret += env_blob
+
         return ret
 
-    def Open(self, path, **kwargs):
-        """ Reads the u-boot environment variables from TXT or BIN File.
-            :param path:
-            :param type:
-            :param size:
-            :param offset:
-        """
-        type = None if not 'type' in kwargs else kwargs['type']
-        size = -1 if not 'size' in kwargs else kwargs['size']
-        offset = 0 if not 'offset' in kwargs else kwargs['offset']
-
-        if not os.path.exists(path):
-            raise Exception("File %s doesnt exist" % path)
-
-        if type is None:
-            type = path.split('.')[-1]
-
-        if type == 'img' or type == 'bin':
-            with open(path, "rb") as f:
-                f.seek(offset)
-                data = f.read(size)
-                self.Import(data)
-                self.size = len(data)
-        elif type == 'txt':
-            with open(path, 'r') as f:
-                data = f.read(size)
-                self.Load(data)
-        else:
-            raise Exception("ERROR: None or unsupported file extension !")
-
-    def Save(self, path, **kwargs):
-        """ Save the u-boot environment variables into TXT or BIN File.
-            :param path:
-            :param type:
-            :param size:
-            :param offset:
-        """
-        type = None if not 'type' in kwargs else kwargs['type']
-        size = None if not 'size' in kwargs else kwargs['size']
-        offset = 0 if not 'offset' in kwargs else kwargs['offset']
-
-        if type is None:
-            type = path.split('.')[-1]
-
-        if type == 'img' or type == 'bin':
-            with open(path, 'wb') as f:
-                f.seek(offset)
-                f.write(self.Export(size=size))
-        elif type == 'txt':
-            with open(path, 'w') as f:
-                f.write(self.Extract())
-        else:
-            raise Exception("ERROR: None or unsupported file extension !")
 
 # Only for test purpose
 if __name__ == "__main__":
@@ -241,38 +157,43 @@ if __name__ == "__main__":
     # create env blob
     env = EnvBlob(name="U-Boot Variables")
     env.redundant = True
-    env.SetEnv("bootdelay", "3")
-    env.SetEnv("stdin", "serial")
-    env.SetEnv("stdout", "serial")
-    env.SetEnv("stderr", "serial")
-    env.SetEnv("baudrate", "115200")
-    env.SetEnv("console", "ttymxc3")
-    env.SetEnv("ethaddr", "12:34:56:78:90:AB")
-    env.SetEnv("ethact", "FEC")
-    env.SetEnv("mmcdev", "0")
-    env.SetEnv("mmcpart", "1")
-    env.SetEnv("rootdev", "mmcblk2p2")
-    env.SetEnv("fdtaddr", "0x18000000")
-    env.SetEnv("fdtfile", "imx6q-pop-arm2.dtb")
-    env.SetEnv("loadfdt", "fatload mmc ${mmcdev}:${mmcpart} ${fdtaddr} ${fdtfile}")
-    env.SetEnv("imgaddr", "0x12000000")
-    env.SetEnv("imgfile", "zImage")
-    env.SetEnv("loadimg", "fatload mmc ${mmcdev}:${mmcpart} ${imgaddr} ${imgfile}")
-    env.SetEnv("bootargs", "console=${console},${baudrate} root=/dev/${rootdev} rootwait rw")
-    env.SetEnv("bootcmd", "run loadfdt; run loadimg; bootz ${imgaddr} - ${fdtaddr};")
+    env.set("bootdelay", "3")
+    env.set("stdin", "serial")
+    env.set("stdout", "serial")
+    env.set("stderr", "serial")
+    env.set("baudrate", "115200")
+    env.set("console", "ttymxc3")
+    env.set("ethaddr", "12:34:56:78:90:AB")
+    env.set("ethact", "FEC")
+    env.set("mmcdev", "0")
+    env.set("mmcpart", "1")
+    env.set("rootdev", "mmcblk2p2")
+    env.set("fdtaddr", "0x18000000")
+    env.set("fdtfile", "imx6q-pop-arm2.dtb")
+    env.set("loadfdt", "fatload mmc ${mmcdev}:${mmcpart} ${fdtaddr} ${fdtfile}")
+    env.set("imgaddr", "0x12000000")
+    env.set("imgfile", "zImage")
+    env.set("loadimg", "fatload mmc ${mmcdev}:${mmcpart} ${imgaddr} ${imgfile}")
+    env.set("bootargs", "console=${console},${baudrate} root=/dev/${rootdev} rootwait rw")
+    env.set("bootcmd", "run loadfdt; run loadimg; bootz ${imgaddr} - ${fdtaddr};")
 
     # create temp dir
     os.makedirs("../../temp", exist_ok=True)
 
     # save test file
-    env.Save("../../temp/env.txt")
-    env.Save("../../temp/env.img")
-    env.Save("../../temp/env", type="img")
+    with open("../../temp/env.txt", 'w') as f:
+        f.write(env.export(raw=False))
+
+    with open("../../temp/env.img", 'wb') as f:
+        f.write(env.export())
 
     # open test file
-    env.Open("../../temp/env", type="img")
+    with open("../../temp/env.img", 'rb') as f:
+        env.parse(data = f.read())
+
     print(env)
-    env.Open("../../temp/env.txt")
-    print(env)
-    env.Open("../../temp/env.img")
+
+    with open("../../temp/env.txt", 'r') as f:
+        env.parse(data = f.read(), raw = False)
+
     print(env)

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from .uenv import EnvBlob
-from .uimg import StdImage, FwImage, ScriptImage, MultiImage, Header, \
-                  OSType, ARCHType, IMGType, COMPRESSType, parse, create
+from .uimg import StdImage, FwImage, ScriptImage, MultiImage, \
+                  OSType, ARCHType, IMGType, COMPRESSType, get_img_type, new_img, parse_img
 
 __author__ = 'Martin Olejar <martin.olejar@gmail.com>'
 __version__ = '0.0.6'
@@ -26,13 +26,13 @@ __all__ = [
     'FwImage',
     'ScriptImage',
     'MultiImage',
-    'Header',
     # Enums
     'OSType',
     'ARCHType',
     'IMGType',
     'COMPRESSType',
     # Methods
-    'parse',
-    'create'
+    'get_img_type',
+    'new_img',
+    'parse_img'
 ]

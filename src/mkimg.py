@@ -15,10 +15,14 @@
 # limitations under the License.
 
 import os
+import sys
 import click
 
 # PyUBoot module
 import uboot
+
+# Application error code
+ERROR_CODE = 1
 
 # The version of u-boot tools
 VERSION = uboot.__version__
@@ -27,6 +31,7 @@ VERSION = uboot.__version__
 DESCRIP = (
     "The U-Boot Image Tool"
 )
+
 
 # User defined class
 class UInt(click.ParamType):
@@ -70,11 +75,12 @@ def info(file):
     """ List image content """
     try:
         with open(file, 'rb') as f:
-            img = uboot.parse(f.read())
-            click.echo(img.GetInfo())
+            img = uboot.parse_img(f.read())
+            click.echo(img.info())
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
 
 
 # U-Boot mkimg: Create new image from attached files
@@ -91,36 +97,41 @@ def info(file):
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):
     """ Create new image from attached files """
     try:
-        imgtype = uboot.IMGType.StrToValue(imgtype)
+        img_type = uboot.IMGType.StrToValue(imgtype)
 
-        if len(infiles) > 1:
-            data = []
+        if img_type == int(uboot.IMGType.MULTI):
+            img = uboot.MultiImage
             for file in infiles:
                 with open(file, 'rb') as f:
-                    data.append(f.read())
-        else:
-            rdf = 'r' if imgtype == uboot.IMGType.SCRIPT else 'rb'
-            with open(infiles[0], rdf) as f:
-                data = f.read()
+                    simg = uboot.parse_img(f.read())
+                    img.append(simg)
 
-        img = uboot.create(imgtype)
+        elif img_type == int(uboot.IMGType.SCRIPT):
+            img = uboot.ScriptImage()
+            with open(infiles[0], 'r') as f:
+                img.load(f.read())
+
+        else:
+            img = uboot.StdImage(image=img_type)
+            with open(infiles[0], 'rb') as f:
+                img.data = f.read()
+
         img.ArchType = uboot.ARCHType.StrToValue(arch)
         img.OsType = uboot.OSType.StrToValue(ostype)
         img.Compression = uboot.COMPRESSType.StrToValue(compress)
         img.LoadAddress = laddr
         img.EntryPoint = epaddr
         img.Name = name
-        img.Load(data)
 
-        click.echo(img.GetInfo())
+        click.echo(img.info())
         with open(outfile, 'wb') as f:
-            f.write(img.Export())
+            f.write(img.export())
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
 
-    else:
-        click.secho("\nCreated Image: %s" % outfile)
+    click.secho("\nCreated Image: %s" % outfile)
 
 
 # U-Boot mkimg: Extract image content
@@ -128,51 +139,42 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
 @click.argument('file',  nargs=1, type=click.Path(exists=True))
 def extract(file):
     """ Extract image content """
-    def Save(dest_dir, file_info, file_data, file_ext):
-        os.makedirs(dest_dir, exist_ok=True)
-        # Save info file
-        fn = os.path.join(dest_dir, 'info.txt')
-        with open(fn, 'w') as f:
-            f.write(file_info)
-        # Save data file
-        fn = os.path.join(dest_dir, 'data.' + file_ext)
-        with open(fn, 'w' if file_ext == 'txt' else 'wb') as f:
-            f.write(file_data)
 
-    def GetFileExt(header):
-        ext_list = ('bin', 'gz', 'bz2', 'lzma', 'lzo', 'lz4')
-        if header.ImageType == int(uboot.IMGType.SCRIPT):
-            ext = 'txt'
-        else:
-            ext = ext_list[header.Compression]
-        return ext
+    def get_file_ext(img):
+        ext = ('bin', 'gz', 'bz2', 'lzma', 'lzo', 'lz4')
+        return ext[img.Compression]
 
     try:
-        file_path, file_name = os.path.split(file)
-        out_path = os.path.normpath(os.path.join(file_path, file_name + ".extracted"))
-
         with open(file, 'rb') as f:
             raw_data = f.read()
 
-        img = uboot.parse(raw_data)
+        img = uboot.parse_img(raw_data)
+
+        file_path, file_name = os.path.split(file)
+        dest_dir = os.path.normpath(os.path.join(file_path, file_name + ".ex"))
+        os.makedirs(dest_dir, exist_ok=True)
+
         if img.ImageType == int(uboot.IMGType.MULTI):
             n = 0
-            for item in img.Extract():
-                dir_name = os.path.join(out_path, 'Image' + str(n))
-                header = item[0]
-                data = item[1]
-                Save(dir_name, header.GetInfo(), data, GetFileExt(header))
+            for simg in img:
+                with open(os.path.join(dest_dir, 'image_{0:02d}.bin'.format(n)), 'wb') as f:
+                    f.write(simg.eport())
                 n += 1
+        elif img.ImageType == int(uboot.IMGType.SCRIPT):
+            with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
+                f.write(img.save())
         else:
-            dir_name = out_path
-            header, data = img.Extract()
-            Save(dir_name, header.GetInfo(), data, GetFileExt(header))
+            with open(os.path.join(dest_dir, 'image.' + get_file_ext(img)), 'wb') as f:
+                f.write(img.data)
+
+        with open(os.path.join(dest_dir, 'info.txt'), 'w') as f:
+            f.write(img.info())
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
 
-    else:
-        click.secho("\nImage extracted into: %s" % out_path)
+    click.secho("\nImage extracted into: %s" % dest_dir)
 
 
 def main():

@@ -15,18 +15,23 @@
 # limitations under the License.
 
 import os
+import sys
 import click
 
 # PyUBoot module
 import uboot
+
+# Application error code
+ERROR_CODE = 1
 
 # The version of u-boot tools
 VERSION = uboot.__version__
 
 # Short description of U-Boot mkenv tool
 DESCRIP = (
-    "The U-Boot Make Enviroment Blob Tool"
+    "The U-Boot Make Environment Blob Tool"
 )
+
 
 # User defined class
 class UInt(click.ParamType):
@@ -66,11 +71,17 @@ def info(offset, size, file):
     """ List image content """
     try:
         env = uboot.EnvBlob()
-        env.Open(file, offset=offset, size=size)
-        click.echo(str(env))
+        with open(file, "rb") as f:
+            f.seek(offset)
+            data = f.read(size)
+            env.parse(data)
+            env.size = len(data)
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+    click.echo(str(env))
 
 
 # U-Boot mkenv: Create new image from attached file
@@ -87,28 +98,62 @@ def create(size, redundant, name, outfile, infile):
         env.name = name
         env.size = size
         env.redundant = redundant
-        env.Open(infile, type='txt')
-        env.Save(outfile, type='bin')
-        click.secho("Done Successfully")
+
+        with open(infile, 'r') as f:
+            data = f.read()
+
+        for line in data.split('\n'):
+            line = line.rstrip('\0')
+            if not line: continue
+
+            if line.startswith('#'):
+                pass  # TODO: Parse init values
+            else:
+                variable, value = line.split('=', 1)
+                env.set(variable, value)
+
+        with open(outfile, 'wb') as f:
+            f.write(env.export())
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+    click.echo("Done Successfully")
 
 
 # U-Boot mkenv: Extract image content
 @cli.command(short_help="Extract image content")
+@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="File Offset")
+@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="Env Blob Size")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
-def extract(file):
+def extract(offset, size, file):
     """ Extract image content """
     try:
         fileName, _ = os.path.splitext(file)
         env = uboot.EnvBlob()
-        env.Open(file, type='bin')
-        env.Save(fileName + '.txt', type='txt')
-        click.secho("Done Successfully")
+        env.size = size
+
+        with open(file, "rb") as f:
+            f.seek(offset)
+            env.parse(f.read())
+
+        msg = "# Name: {0:s}\n".format(env.name) if env.name else ""
+        msg += "# Size: {0:d}\n".format(env.size)
+        msg += "# Redundant: {0:s}\n".format("YES" if env.redundant else "NO")
+        msg += "\n"
+
+        for var in env.get():
+            msg += "{0:s}={1:s}\n".format(var, env.get(var))
+
+        with open(fileName + '.txt', 'w') as f:
+            f.write(msg)
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+        click.echo("Done Successfully")
 
 
 def main():
