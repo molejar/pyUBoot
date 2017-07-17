@@ -95,7 +95,7 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
     scimg.Compression = uboot.COMPRESSType.NONE
     scimg.EntryAddress = 0
     scimg.LoadAddress = 0
-    scimg.append("echo", "===== U-Boot settings =====")
+    scimg.append("echo", "'===== U-Boot settings ====='")
     scimg.append("setenv", "stdin serial")
     scimg.append("setenv", "stdout serial")
     scimg.append("setenv", "rootdev mmcblk2p2")
@@ -128,7 +128,9 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
     print(img)  # print parsed image info
 ```
 
-`pyUBoot` is distributed with two command-line utilities (tools): [mkimg](doc/mkimg.md) and [mkenv](doc/mkenv.md).
+The `pyUBoot` module is distributed with two command-line utilities (tools):
+* [mkenv](doc/mkenv.md) - a tool to generate/extract U-Boot environment variables into/from a binary blob
+* [mkimg](doc/mkimg.md) - a tool for manipulation with U-Boot executable images (zImage, Scripts, ...)
 
 TODO
 ----

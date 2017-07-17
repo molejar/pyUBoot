@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2016 Martin Olejar
 #
@@ -109,7 +109,17 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
         elif img_type == int(uboot.IMGType.SCRIPT):
             img = uboot.ScriptImage()
             with open(infiles[0], 'r') as f:
-                img.load(f.read())
+                data = f.read()
+            for line in data.split('\n'):
+                line = line.rstrip('\0')
+                if not line:
+                    continue
+                if line.startswith('#'):
+                    continue
+                cmd = line.split(' ', 1)
+                if len(cmd) == 1:
+                    cmd.append('')
+                img.append(cmd[0], cmd[1])
 
         else:
             img = uboot.StdImage(image=img_type)
@@ -131,7 +141,7 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
         click.echo(str(e) if str(e) else "Unknown Error !")
         sys.exit(ERROR_CODE)
 
-    click.secho("\nCreated Image: %s" % outfile)
+    click.secho("\n Created Image: %s" % outfile)
 
 
 # U-Boot mkimg: Extract image content
@@ -161,8 +171,12 @@ def extract(file):
                     f.write(simg.eport())
                 n += 1
         elif img.ImageType == int(uboot.IMGType.SCRIPT):
+            script = '# U-Boot Script\n\n'
+            for cmd in img.cmds:
+                script += "{0:s} {1:s}\n".format(cmd[0], cmd[1])
             with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
-                f.write(img.save())
+                f.write(script)
+
         else:
             with open(os.path.join(dest_dir, 'image.' + get_file_ext(img)), 'wb') as f:
                 f.write(img.data)
@@ -174,7 +188,7 @@ def extract(file):
         click.echo(str(e) if str(e) else "Unknown Error !")
         sys.exit(ERROR_CODE)
 
-    click.secho("\nImage extracted into: %s" % dest_dir)
+    click.secho("\n Image extracted into dir: %s" % dest_dir)
 
 
 def main():

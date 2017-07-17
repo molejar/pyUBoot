@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import time
 import zlib
 from struct import pack, unpack_from, calcsize
 from enum import Enum, unique
-
-if sys.version_info[0] < 3:
-    raise "Must be using Python 3"
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -176,73 +172,23 @@ class Header(object):
     FORMAT = '!7L4B32s'        ### (Big-endian, 7 ULONGS, 4 UCHARs, 32-byte string)
     SIZE   = calcsize(FORMAT)  ### Should be 64-bytes
 
-    _os_type_name = (
-        (OSType.OPENBSD,     "OpenBSD"),
-        (OSType.NETBSD,      "NetBSD"),
-        (OSType.FREEBSD,     "FreeBSD"),
-        (OSType.BSD4,        "4-BSD"),
-        (OSType.LINUX,       "Linux"),
-        (OSType.SVR4,        "SVR4"),
-        (OSType.ESIX,        "ESIX"),
-        (OSType.SOLARIS,     "Solaris"),
-        (OSType.IRIX,        "IRIX"),
-        (OSType.SCO,         "SCO"),
-        (OSType.DELL,        "Dell"),
-        (OSType.NCR,         "NCR"),
-        (OSType.LYNXOS,      "LynxOS"),
-        (OSType.VXWORKS,     "VXWorks"),
-        (OSType.PSOS,        "PSOS"),
-        (OSType.QNX,         "QNX"),
-        (OSType.UBOOT,       "UBoot"),
-        (OSType.RTEMS,       "RTEMS"),
-        (OSType.UNITY,       "Unity"),
-        (OSType.INTEGRITY,   "Integrity"),
-        (OSType.OSE,         "OSE"),
-        (OSType.PLAN9,       "PLAN9"),
-        (OSType.OPENRTOS,    "OpenRTOS")
+    OS_NAMES = (
+        "NA", "OpenBSD", "NetBSD", "FreeBSD", "4-BSD", "Linux", "SVR4", "ESIX", "Solaris", "IRIX", "SCO", "Dell", "NCR",
+        "LynxOS", "VXWorks", "PSOS", "QNX", "UBoot", "RTEMS", "Unity", "Integrity", "OSE", "PLAN9", "OpenRTOS"
     )
 
-    _arch_type_name = (
-        (ARCHType.ALPHA,     "Alpha"),
-        (ARCHType.ARM,       "ARM"),
-        (ARCHType.X86,       "X86"),
-        (ARCHType.IA64,      "IA64"),
-        (ARCHType.MIPS,      "MIPS"),
-        (ARCHType.MIPS64,    "MIPS64"),
-        (ARCHType.PPC,       "PPC"),
-        (ARCHType.S390,      "S390"),
-        (ARCHType.SH,        "SH"),
-        (ARCHType.SPARC,     "SPARC"),
-        (ARCHType.SPARC64,   "SPARC64"),
-        (ARCHType.M68K,      "M68K"),
-        (ARCHType.MICROBLAZE,"MicroBlaze"),
-        (ARCHType.NIOS2,     "NIOS2"),
-        (ARCHType.BLACKFIN,  "Blackfin"),
-        (ARCHType.AVR32,     "AVR32"),
-        (ARCHType.ST200,     "ST200"),
-        (ARCHType.NDS32,     "NDS32"),
-        (ARCHType.OR1K,      "OR1K"),
+    ARCH_NAMES = (
+        "NA", "Alpha", "ARM", "X86", "IA64", "MIPS", "MIPS64", "PPC", "S390", "SH", "SPARC", "SPARC64", "M68K",
+        "MicroBlaze", "NIOS2", "Blackfin", "AVR32", "ST200", "NDS32", "OR1K"
     )
 
-    _image_type_name = (
-        (IMGType.STD,        "Standalone"),
-        (IMGType.KERNEL,     "Kernel"),
-        (IMGType.RAMDISK,    "RAMDisk"),
-        (IMGType.MULTI,      "Multi-File"),
-        (IMGType.FIRMWARE,   "Firmware"),
-        (IMGType.SCRIPT,     "Script"),
-        (IMGType.FILESYSTEM, "FileSystem"),
-        (IMGType.FLATDT,     "Flat-DT"),
+    IMAGE_NAMES = (
+        "NA", "Standalone", "Kernel", "RAMDisk", "Multi-File", "Firmware", "Script", "FileSystem", "Flat-DT", "KWB",
+        "IMX", "UBL", "OMAP", "AIS", "KernelNoLoad", "PBL", "MXS", "GP", "Atmel", "SoC-FPGA", "X86-Setup", "LPC32xx",
+        "Loadable", "RK", "RKSD", "RKSPI", "ZYNQ"
     )
 
-    _compression = (
-        (COMPRESSType.NONE,  "uncompressed"),
-        (COMPRESSType.GZIP,  "gzip"),
-        (COMPRESSType.BZIP2, "bzip2"),
-        (COMPRESSType.LZMA,  "lzma"),
-        (COMPRESSType.LZO,   "lzo"),
-        (COMPRESSType.LZ4,   "lz4")
-    )
+    COMPRESS_NAMES = ("uncompressed", "gzip", "bzip2", "lzma", "lzo", "lz4")
 
     @property
     def MagicNumber(self):
@@ -403,42 +349,20 @@ class Header(object):
                       self.Name.encode('utf-8'))
         return CRC32(header)
 
-    def _get_name(self, enum, value):
-        def getn(nlist, value):
-            for item in nlist:
-                if int(item[0]) == value:
-                    return item[1]
-            return None
-
-        if   issubclass(enum, OSType):
-            name_list = self._os_type_name
-        elif issubclass(enum, ARCHType):
-            name_list = self._arch_type_name
-        elif issubclass(enum, IMGType):
-            name_list = self._image_type_name
-        elif issubclass(enum, COMPRESSType):
-            name_list = self._compression
-        else:
-            raise Exception("Unsupported Type")
-
-        name = getn(name_list, value)
-        return name if name else enum.ValueToStr(value)
-
     def info(self):
         msg  = "Image Name:    {0:s}\n".format(self.Name)
         msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.TimeStamp)))
-        msg += "Image Type:    {0:s} {1:s} {2:s} ({3:s})\n".format(ARCHType.ValueToStr(self.ArchType),
-                                                                   OSType.ValueToStr(self.OsType).capitalize(),
-                                                                   IMGType.ValueToStr(self.ImageType).capitalize(),
-                                                                   'uncompressed' if self.Compression == 0 else
-                                                                   COMPRESSType.ValueToStr(self.Compression))
+        msg += "Image Type:    {0:s} {1:s} {2:s} ({3:s})\n".format(self.ARCH_NAMES[self.ArchType],
+                                                                   self.OS_NAMES[self.OsType],
+                                                                   self.IMAGE_NAMES[self.ImageType],
+                                                                   self.COMPRESS_NAMES[self.Compression])
         msg += "Data Size:     {0:.02f} kB\n".format(self.DataSize / 1024)
         msg += "Load Address:  0x{0:08X}\n".format(self.LoadAddress)
         msg += "Entry Address: 0x{0:08X}\n".format(self.EntryAddress)
         return msg
 
     def parse(self, data, offset=0):
-        if len(data) < self.SIZE:
+        if len(data) < self.size:
             raise Exception("Header: Too small size of input data !")
 
         val = unpack_from(self.FORMAT, data, offset)
@@ -453,12 +377,12 @@ class Header(object):
         self.ArchType     = val[8]
         self.ImageType    = val[9]
         self.Compression  = val[10]
-        self.Name         = val[11].decode('utf-8')
+        self.Name         = val[11].decode('utf-8').strip('\0')
 
         if header_crc != self._crc():
             raise Exception("Header: Uncorrect CRC of input data !")
 
-        return self.SIZE
+        return self.size
 
     def export(self):
         header = pack(self.FORMAT,
@@ -638,9 +562,18 @@ class FwImage(StdImage):
 
 
 class ScriptImage(BaseImage):
+
+    @property
+    def cmds(self):
+        return self._cmds
+
+    @cmds.setter
+    def cmds(self, value):
+        self._cmds = value
+
     def __init__(self, cmds=None, **kwargs):
         """ Script Image Constructor
-        :param cmds:     List of commands
+        :param cmds:     List of commands, the item is in format [<cmd_name>, <cmd_value>]
         :param laddr:    Load address
         :param eaddr:    Entry point address
         :param arch:     Architecture (ARCHType Enum)
@@ -653,12 +586,11 @@ class ScriptImage(BaseImage):
         self._header.ImageType = IMGType.SCRIPT
         self._cmds = cmds if cmds else []
 
+    def __str__(self):
+        return self.info()
+
     def __repr__(self):
-        msg  = super().__repr__()
-        msg += 'Content:       {0:d} Commands\n'.format(len(self._cmds))
-        for val in self._cmds:
-            msg += "- {}\n".format(val)
-        return msg
+        return self.info()
 
     def __len__(self):
         return len(self._cmds)
@@ -676,15 +608,15 @@ class ScriptImage(BaseImage):
         i = 0
         msg  = super().info()
         msg += 'Content:       {0:d} Commands\n'.format(len(self._cmds))
-        for val in self._cmds:
-            msg += "{0:3d}) {1:s}\n".format(i, val)
+        for cmd in self._cmds:
+            msg += "{0:3d}) {1:s} {2:s}\n".format(i, cmd[0], cmd[1])
             i += 1
         return msg
 
     def append(self, cmd_name, cmd_value):
         assert type(cmd_name) is str, "ScriptImage: Command name must be a string"
         assert type(cmd_value) is str, "ScriptImage: Command value must be a string"
-        self._cmds.append("{0:s} {1:s}".format(cmd_name, cmd_value))
+        self._cmds.append([cmd_name, cmd_value])
 
     def pop(self, index):
         assert 0 <= index < len(self._cmds)
@@ -717,32 +649,29 @@ class ScriptImage(BaseImage):
         data = data[offset:].decode('utf-8')
         for line in data.split('\n'):
             line = line.rstrip('\0')
-            if not line or line.startswith('#'):
+            if not line:
                 continue
-            self._cmds.append(line)
+            if line.startswith('#'):
+                continue
+            cmd = line.split(' ', 1)
+            if len(cmd) == 1:
+                cmd.append('')
+            self._cmds.append(cmd)
 
     def export(self):
         """ Export the image into byte array. """
         if len(self._cmds) == 0:
             raise Exception("Image: No data to export !")
 
-        data = '\n'.join(self._cmds).encode('utf-8')
+        data = bytearray()
+        for cmd in self._cmds:
+            data += "{0:s} {1:s}\n".format(cmd[0], cmd[1]).encode('utf-8')
         data = pack('!2L', len(data), 0) + data
 
         self._header.DataSize = len(data)
         self._header.DataCRC = CRC32(data)
 
         return self._header.export() + data
-
-    def load(self, data):
-        for line in data.split('\n'):
-            line = line.rstrip('\0')
-            if not line or line.startswith('#'):
-                continue
-            self._cmds.append(line)
-
-    def save(self):
-        return self._header, '\n'.join(self._cmds)
 
 
 class MultiImage(BaseImage):
@@ -922,56 +851,3 @@ def parse_img(data, offset=0, magic_number=0x27051956):
     imgObj.parse(data, offset)
 
     return imgObj
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Example of its usage
-# ----------------------------------------------------------------------------------------------------------------------
-if __name__ == "__main__":
-    import os
-
-    # create dummy firmware image (u-boot executable image)
-    fwimg = StdImage(bytes([1]*512),
-                     name="Firmware Test Image",
-                     laddr=0,
-                     eaddr=0,
-                     arch=ARCHType.ARM,
-                     os=OSType.LINUX,
-                     image=IMGType.FIRMWARE,
-                     compress=COMPRESSType.NONE)
-    # create script image (u-boot executable image)
-    scimg = ScriptImage()
-    scimg.Name = "Test Script Image"
-    scimg.OsType = OSType.LINUX
-    scimg.ArchType = ARCHType.ARM
-    scimg.Compression = COMPRESSType.NONE
-    scimg.EntryAddress = 0
-    scimg.LoadAddress = 0
-    scimg.append("setenv", "loadaddr 00200000")
-    scimg.append("echo", "===== U-Boot settings =====")
-    scimg.append("setenv", "u-boot /tftpboot/TQM860L/u-boot.bin")
-    scimg.append("setenv", "u-boot_addr 40000000")
-    scimg.append("setenv", "load_u-boot 'tftp ${loadaddr} ${u-boot}'")
-    # create multi-file image
-    mimg = MultiImage(name="Multi-File Test Image",
-                      laddr=0,
-                      eaddr=0,
-                      arch=ARCHType.ARM,
-                      os=OSType.LINUX,
-                      compress=COMPRESSType.NONE)
-    mimg.append(fwimg)
-    mimg.append(scimg)
-    # print created image info
-    print(mimg.info())
-    # create temp dir
-    os.makedirs("../../temp", exist_ok=True)
-    # save created image into file
-    with open("../../temp/aax.img", "wb") as f:
-        f.write(mimg.export())
-    # load image from file
-    with open("../../temp/aax.img", "rb") as f:
-        data = f.read()
-    # parse binary blob
-    img = parse_img(data)
-    # print info
-    print(img.info())

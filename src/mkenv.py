@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2016 Martin Olejar
 #
@@ -64,8 +64,9 @@ def cli():
 
 # U-Boot mkenv: List image content
 @cli.command(short_help="List image content")
-@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="File Offset")
-@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="Env Blob Size")
+@click.option('-b', '--bigendian', is_flag=True, help="The target is big endian (default is little endian)")
+@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="The offset of input file")
+@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="The environment blob size")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
 def info(offset, size, file):
     """ List image content """
@@ -86,18 +87,15 @@ def info(offset, size, file):
 
 # U-Boot mkenv: Create new image from attached file
 @cli.command(short_help="Create new image from attached file")
-@click.option('-n', '--name', type=str, default="", help="Image name (max: 32 chars)")
-@click.option('-r', '--redundant', is_flag=True, show_default=True, help="Redundant Env.")
-@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="Env. Blob Size")
+@click.argument('infile',  nargs=1, type=click.Path(exists=True))
 @click.argument('outfile', nargs=1, type=click.Path(readable=False))
-@click.argument('infile', nargs=1, type=click.Path(exists=True))
-def create(size, redundant, name, outfile, infile):
+@click.option('-b', '--bigendian', is_flag=True, help="The target is big endian (default is little endian)")
+@click.option('-r', '--redundant', is_flag=True, show_default=True, help="The environment has multiple copies in flash")
+@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="The environment blob size")
+def create(size, redundant, bigendian, infile, outfile):
     """ Create new image from attached file """
     try:
-        env = uboot.EnvBlob()
-        env.name = name
-        env.size = size
-        env.redundant = redundant
+        env = uboot.EnvBlob(size=size, redundant=redundant, bigendian=bigendian)
 
         with open(infile, 'r') as f:
             data = f.read()
@@ -119,28 +117,29 @@ def create(size, redundant, name, outfile, infile):
         click.echo(str(e) if str(e) else "Unknown Error !")
         sys.exit(ERROR_CODE)
 
-    click.echo("Done Successfully")
+    click.secho(" Successfully created: %s" % outfile)
 
 
 # U-Boot mkenv: Extract image content
 @cli.command(short_help="Extract image content")
-@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="File Offset")
-@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="Env Blob Size")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
+@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="The offset of input file")
+@click.option('-b', '--bigendian', is_flag=True, help="The target is big endian (default is little endian)")
+@click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="The environment blob size")
 def extract(offset, size, file):
     """ Extract image content """
     try:
         fileName, _ = os.path.splitext(file)
-        env = uboot.EnvBlob()
-        env.size = size
+        env = uboot.EnvBlob(size=size)
 
         with open(file, "rb") as f:
             f.seek(offset)
             env.parse(f.read())
 
-        msg = "# Name: {0:s}\n".format(env.name) if env.name else ""
-        msg += "# Size: {0:d}\n".format(env.size)
-        msg += "# Redundant: {0:s}\n".format("YES" if env.redundant else "NO")
+        msg  = "# Name:      {0:s}\n".format(env.name if env.name else "")
+        msg += "# Size:      {0:d}\n".format(env.size)
+        #msg += "# Endian:    {0:s}\n".format("Big" if env.bigendian else "Little")
+        msg += "# Redundant: {0:s}\n".format("Yes" if env.redundant else "No")
         msg += "\n"
 
         for var in env.get():
@@ -153,7 +152,7 @@ def extract(offset, size, file):
         click.echo(str(e) if str(e) else "Unknown Error !")
         sys.exit(ERROR_CODE)
 
-        click.echo("Done Successfully")
+    click.secho(" Successfully extracted: %s.txt" % fileName)
 
 
 def main():

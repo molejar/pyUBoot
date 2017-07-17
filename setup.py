@@ -17,6 +17,9 @@
 import sys
 from setuptools import setup, find_packages
 
+if sys.version_info[0] == 2:
+    sys.exit('Sorry, Python 2.x is not supported')
+
 sys.path.insert(0, './src')
 import uboot
 
@@ -32,7 +35,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'':'src'},
     classifiers=[
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Operating System :: OS Independent',
         'License :: OSI Approved :: Apache Software License',
         'Topic :: Scientific/Engineering',
