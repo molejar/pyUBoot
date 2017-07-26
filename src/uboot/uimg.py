@@ -461,9 +461,11 @@ class BaseImage(object):
     def Name(self, value):
         self._header.Name = value
 
+    def __str__(self):
+        return self.info()
+
     def __repr__(self):
-        self.export()
-        return str(self._header)
+        return self.info()
 
     def info(self):
         self.export()
@@ -498,11 +500,6 @@ class StdImage(BaseImage):
     @data.setter
     def data(self, value):
         self._data = value
-
-    def __repr__(self):
-        msg  = super().__repr__()
-        msg += "Content:       Binary Blob ({0:d} Bytes)\n".format(len(self._data))
-        return msg
 
     def __len__(self):
         return len(self._data)
@@ -586,12 +583,6 @@ class ScriptImage(BaseImage):
         self._header.ImageType = IMGType.SCRIPT
         self._cmds = cmds if cmds else []
 
-    def __str__(self):
-        return self.info()
-
-    def __repr__(self):
-        return self.info()
-
     def __len__(self):
         return len(self._cmds)
 
@@ -625,6 +616,33 @@ class ScriptImage(BaseImage):
     def clear(self):
         self._cmds.clear()
 
+    def load(self, txt_data):
+
+        for line in txt_data.split('\n'):
+            line = line.rstrip('\0')
+            if not line:
+                continue
+            if line.startswith('#'):
+                continue
+            cmd = line.split(' ', 1)
+            if len(cmd) == 1:
+                cmd.append('')
+            self._cmds.append([cmd[0], cmd[1]])
+
+    def store(self, txt_data=None):
+        """ Store variables into text file
+        :param txt_data:
+        :return: txt_data
+        """
+        if txt_data is None:
+            txt_data = ""
+
+        txt_data += '# U-Boot Script\n\n'
+        for cmd in self._cmds:
+            txt_data += "{0:s} {1:s}\n".format(cmd[0], cmd[1])
+
+        return txt_data
+
     def parse(self, data, offset=0):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
@@ -639,14 +657,10 @@ class ScriptImage(BaseImage):
             raise Exception("Image: Uncorrect CRC of input data ")
 
         # TODO: Check image format for script type
-        # Skip non ASCI characters
-        offset = 0
-        for c in data:
-            if 31 < c < 127:
-                break
-            offset += 1
+        size = unpack_from('!2L', data)[0]
+        offset = 8
 
-        data = data[offset:].decode('utf-8')
+        data = data[offset:offset+size].decode('utf-8')
         for line in data.split('\n'):
             line = line.rstrip('\0')
             if not line:
@@ -663,7 +677,7 @@ class ScriptImage(BaseImage):
         if len(self._cmds) == 0:
             raise Exception("Image: No data to export !")
 
-        data = bytearray()
+        data = b''
         for cmd in self._cmds:
             data += "{0:s} {1:s}\n".format(cmd[0], cmd[1]).encode('utf-8')
         data = pack('!2L', len(data), 0) + data
@@ -689,17 +703,6 @@ class MultiImage(BaseImage):
         # Set Image Type as Multi in default
         self._header.ImageType = IMGType.MULTI
         self._imgs = imgs if imgs else []
-
-    def __repr__(self):
-        self.export()
-        msg = str(self._header)
-        msg += 'Content:       {0:d} Images\n'.format(len(self._imgs))
-        n = 0
-        for img in self._imgs:
-            msg += '[ Image: ' + str(n) + ' ]\n'
-            msg += str(img)
-            n += 1
-        return msg
 
     def __len__(self):
         return len(self._imgs)
@@ -798,11 +801,10 @@ class MultiImage(BaseImage):
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def get_img_type(data, offset=0, magic_number=0x27051956, itpos=30):
+def get_img_type(data, offset=0):
     """ Help function for extracting image fom raw data
     :param data: The raw data as byte array
     :param offset: The offset
-    :param magic_number:
     :return: Image type and offset where image start
     """
     while True:
@@ -810,14 +812,15 @@ def get_img_type(data, offset=0, magic_number=0x27051956, itpos=30):
             raise Exception("Error: Not an U-Boot image !")
 
         (header_mn, header_crc,) = unpack_from('!2L', data, offset)
-        if magic_number == header_mn:
+        # Check the magic number if is U-Boot image
+        if header_mn == 0x27051956:
             header = bytearray(data[offset:offset+Header.SIZE])
             header[4:8] = [0]*4
             if header_crc == CRC32(header):
                 break
         offset += 4
 
-    (image_type,) = unpack_from('B', data, offset + itpos)
+    (image_type,) = unpack_from('B', data, offset + 30)
 
     return image_type, offset
 
@@ -839,14 +842,14 @@ def new_img(img_type):
     return img_obj
 
 
-def parse_img(data, offset=0, magic_number=0x27051956):
+def parse_img(data, offset=0):
     """ Help function for extracting image fom raw data
     :param data: The raw data as byte array
     :param offset: The offset
     :param magic_number:
     :return: Image object
     """
-    (imgType, offset) = get_img_type(bytearray(data), offset, magic_number)
+    (imgType, offset) = get_img_type(bytearray(data), offset)
     imgObj = new_img(imgType)
     imgObj.parse(data, offset)
 

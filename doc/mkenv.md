@@ -60,7 +60,7 @@ Variables:
 
 #### $ mkenv extract FILE
 
-Extract the content of U-Boot environment blob and save it in readable text format
+Extract the content of U-Boot environment blob and save it as readable text file. That way you can extract the U-Boot environment blob from SD card image.
 
 ##### options:
 * **-b, --bigendian** - The target is big endian (default is little endian)
@@ -74,14 +74,13 @@ Extract the content of U-Boot environment blob and save it in readable text form
 $ mkenv extract env.bin
 
  Successfully extracted: env.txt
-
 ```
 
 <br>
 
 #### $ mkenv create [OPTIONS] INFILE OUTFILE
 
-Create U-Boot environment blob from input text file
+Create U-Boot environment blob from input text file and save it as binary file.
 
 ##### options:
 * **-r, --redundant** - The environment has multiple copies in flash (default: False)
@@ -95,5 +94,4 @@ Create U-Boot environment blob from input text file
 $ mkenv create env.txt env.bin
 
  Successfully created: env.bin
-
 ```

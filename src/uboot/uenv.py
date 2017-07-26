@@ -104,6 +104,41 @@ class EnvBlob(object):
             value = str(value)
         self._env[name] = value
 
+    def clear(self):
+        self._env.clear()
+
+    def load(self, txt_data):
+        """ Load variables from text file
+        :param txt_data:
+        """
+        for line in txt_data.split('\n'):
+            line = line.rstrip('\0')
+            if not line: continue
+
+            if line.startswith('#'):
+                pass  # TODO: Parse init values
+            else:
+                name, value = line.split('=', 1)
+                self._env[name] = value
+
+    def store(self, txt_data=None):
+        """ Store variables into text file
+        :param txt_data:
+        :return: txt_data
+        """
+        if txt_data is None:
+            txt_data = ""
+
+        txt_data += "# Name:      {0:s}\n".format(self.name if self.name else "")
+        txt_data += "# Size:      {0:d}\n".format(self.size)
+        txt_data += "# Redundant: {0:s}\n".format("Yes" if self.redundant else "No")
+        txt_data += "\n"
+
+        for key, val in self._env.items():
+            txt_data += "{0:s}={1:s}\n".format(key, val)
+
+        return txt_data
+
     def parse(self, data, offset=0):
         """ Parse the u-boot environment variables from bytearray.
             :param data: The data in bytes array

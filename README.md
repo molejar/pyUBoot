@@ -52,18 +52,36 @@ The first example is showing how to use `EnvBlob` class from `uboot` module in y
     env.set("stdout", "serial")
 
     # --------------------------------------------------------------------------------
-    # save env blob into binary file
+    # save env blob as binary file
     # --------------------------------------------------------------------------------
     with open("env.img", 'wb') as f:
         f.write(env.export())
 
     # --------------------------------------------------------------------------------
-    # open and parse env blob from binary file
+    # save env blob in readable format as text file
+    # --------------------------------------------------------------------------------
+    with open("env.txt", 'w') as f:
+        f.write(env.store())
+
+    # --------------------------------------------------------------------------------
+    # parse env blob from binary file
     # --------------------------------------------------------------------------------
     with open("env.img", 'rb') as f:
         env.parse(f.read())
 
     # print env blob info
+    print("U-Boot enviroment blob loaded from env.img file:")
+    print(env)
+    print()
+
+    # --------------------------------------------------------------------------------
+    # load env blob from text file
+    # --------------------------------------------------------------------------------
+    with open("env.txt", 'r') as f:
+        env.load(f.read())
+
+    # print env blob info
+    print("U-Boot enviroment blob loaded from env.txt file:")
     print(env)
 ```
 
@@ -111,7 +129,8 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
                             compress=uboot.COMPRESSType.NONE)
     mimg.append(fwimg)
     mimg.append(scimg)
-    print(mimg) # print created image info
+    # print created image info
+    print(mimg)
 
     # --------------------------------------------------------------------------------
     # save created image into file: uboot_mimg.img
@@ -120,12 +139,18 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
         f.write(mimg.export())
 
     # --------------------------------------------------------------------------------
-    # load image from file: uboot_mimg.img
+    # open and read image file: uboot_mimg.img
     # --------------------------------------------------------------------------------
     with open("uboot_mimg.img", "rb") as f:
         data = f.read()
-    img = uboot.parse(data)
-    print(img)  # print parsed image info
+
+    # --------------------------------------------------------------------------------
+    # parse binary data into new img object of specific image type
+    # --------------------------------------------------------------------------------
+    img = uboot.parse_img(data)
+
+    # print parsed image info
+    print(img)
 ```
 
 The `pyUBoot` module is distributed with two command-line utilities (tools):

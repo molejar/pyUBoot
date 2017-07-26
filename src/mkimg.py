@@ -109,17 +109,7 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
         elif img_type == int(uboot.IMGType.SCRIPT):
             img = uboot.ScriptImage()
             with open(infiles[0], 'r') as f:
-                data = f.read()
-            for line in data.split('\n'):
-                line = line.rstrip('\0')
-                if not line:
-                    continue
-                if line.startswith('#'):
-                    continue
-                cmd = line.split(' ', 1)
-                if len(cmd) == 1:
-                    cmd.append('')
-                img.append(cmd[0], cmd[1])
+                img.load(f.read())
 
         else:
             img = uboot.StdImage(image=img_type)
@@ -171,11 +161,8 @@ def extract(file):
                     f.write(simg.eport())
                 n += 1
         elif img.ImageType == int(uboot.IMGType.SCRIPT):
-            script = '# U-Boot Script\n\n'
-            for cmd in img.cmds:
-                script += "{0:s} {1:s}\n".format(cmd[0], cmd[1])
             with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
-                f.write(script)
+                f.write(img.store())
 
         else:
             with open(os.path.join(dest_dir, 'image.' + get_file_ext(img)), 'wb') as f:

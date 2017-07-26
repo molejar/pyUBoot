@@ -98,17 +98,7 @@ def create(size, redundant, bigendian, infile, outfile):
         env = uboot.EnvBlob(size=size, redundant=redundant, bigendian=bigendian)
 
         with open(infile, 'r') as f:
-            data = f.read()
-
-        for line in data.split('\n'):
-            line = line.rstrip('\0')
-            if not line: continue
-
-            if line.startswith('#'):
-                pass  # TODO: Parse init values
-            else:
-                variable, value = line.split('=', 1)
-                env.set(variable, value)
+            env.load(f.read())
 
         with open(outfile, 'wb') as f:
             f.write(env.export())
@@ -136,17 +126,8 @@ def extract(offset, size, file):
             f.seek(offset)
             env.parse(f.read())
 
-        msg  = "# Name:      {0:s}\n".format(env.name if env.name else "")
-        msg += "# Size:      {0:d}\n".format(env.size)
-        #msg += "# Endian:    {0:s}\n".format("Big" if env.bigendian else "Little")
-        msg += "# Redundant: {0:s}\n".format("Yes" if env.redundant else "No")
-        msg += "\n"
-
-        for var in env.get():
-            msg += "{0:s}={1:s}\n".format(var, env.get(var))
-
         with open(fileName + '.txt', 'w') as f:
-            f.write(msg)
+            f.write(env.store())
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
