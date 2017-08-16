@@ -26,7 +26,7 @@ ERROR_CODE = 1
 # The version of u-boot tools
 VERSION = uboot.__version__
 
-# Short description of U-Boot mkenv tool
+# Short description of U-Boot envimg tool
 DESCRIP = (
     "Tool for editing environment variables inside U-Boot image"
 )

@@ -90,7 +90,7 @@ def info(file):
 @click.option('-c', '--compress', type=click.Choice(COMT), default='none', show_default=True, help='Image compression')
 @click.option('-l', '--laddr',  type=UINT, default=0, show_default=True, help="Load address")
 @click.option('-e', '--epaddr', type=UINT, default=0, show_default=True, help="Entry point address")
-@click.option('-n', '--name', type=str, default="", help="Image name (max: 32 chars)")
+@click.option('-n', '--name', type=click.STRING, default="", help="Image name (max: 32 chars)")
 @click.argument('outfile', nargs=1, type=click.Path(readable=False))
 @click.argument('infiles',  nargs=-1, type=click.Path(exists=True))
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):

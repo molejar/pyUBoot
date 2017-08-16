@@ -154,6 +154,7 @@ The second example is showing how to create Multi-File U-Boot image with `uboot`
 ```
 
 The `pyUBoot` module is distributed with two command-line utilities (tools):
+* [envimg](doc/envimg.md) - a tool for editing environment variables inside U-Boot image
 * [mkenv](doc/mkenv.md) - a tool to generate/extract U-Boot environment variables into/from a binary blob
 * [mkimg](doc/mkimg.md) - a tool for manipulation with U-Boot executable images (zImage, Scripts, ...)
 
