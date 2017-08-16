@@ -1,16 +1,17 @@
-# Copyright 2016 Martin Olejar
+# Copyright (c) 2017 Martin Olejar, martin.olejar@gmail.com
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import time
 import zlib
@@ -35,35 +36,35 @@ def CRC32(data):
 # ----------------------------------------------------------------------------------------------------------------------
 class IntEnum(int, Enum):
     @classmethod
-    def CheckValue(cls, value):
+    def check_value(cls, value):
         for n, v in cls.__members__.items():
             if int(value) == int(v):
                 return True
         return False
 
     @classmethod
-    def StrToValue(cls, name):
+    def str_to_value(cls, name):
         for n, v in cls.__members__.items():
             if name.upper() == n:
                 return int(v)
         raise ValueError("Unsupported name: %s" % name)
 
     @classmethod
-    def ValueToStr(cls, value):
+    def value_to_str(cls, value):
         for n, v in cls.__members__.items():
             if int(value) == int(v):
                 return n
         return "0x{0:08X}".format(value)
 
     @classmethod
-    def GetNames(cls, lower=False):
+    def get_names(cls, lower=False):
         if lower:
             return [x.lower() for x in cls.__members__.keys()]
         else:
             return cls.__members__.keys()
 
     @classmethod
-    def GetItems(cls):
+    def get_items(cls):
         items = {}
         for n, v in cls.__members__.items():
             items[n] = int(v)
@@ -248,7 +249,7 @@ class Header(object):
 
     @OsType.setter
     def OsType(self, value):
-        assert OSType.CheckValue(value), "HEADER: Unknown Value of OS Type: %d" % value
+        assert OSType.check_value(value), "HEADER: Unknown Value of OS Type: %d" % value
         self._osType = int(value)
 
     @property
@@ -257,7 +258,7 @@ class Header(object):
 
     @ArchType.setter
     def ArchType(self, value):
-        assert ARCHType.CheckValue(value), "HEADER: Unknown Value of Arch Type: %d" % value
+        assert ARCHType.check_value(value), "HEADER: Unknown Value of Arch Type: %d" % value
         self._archType = int(value)
 
     @property
@@ -266,7 +267,7 @@ class Header(object):
 
     @ImageType.setter
     def ImageType(self, value):
-        assert IMGType.CheckValue(value), "HEADER: Unknown Value of Image Type: %d" % value
+        assert IMGType.check_value(value), "HEADER: Unknown Value of Image Type: %d" % value
         self._imageType = int(value)
 
     @property
@@ -275,7 +276,7 @@ class Header(object):
 
     @Compression.setter
     def Compression(self, value):
-        assert COMPRESSType.CheckValue(value), "HEADER: Unknown Value of Compression Type: %d" % value
+        assert COMPRESSType.check_value(value), "HEADER: Unknown Value of Compression Type: %d" % value
         self._compression = int(value)
 
     @property
@@ -326,10 +327,10 @@ class Header(object):
         msg += "Load Address:  0x{0:08X}\n".format(self.LoadAddress)
         msg += "Entry Address: 0x{0:08X}\n".format(self.EntryAddress)
         msg += "Data CRC:      0x{0:08X}\n".format(self.DataCRC)
-        msg += "OS Type:       {0:s}\n".format(OSType.ValueToStr(self.OsType))
-        msg += "Arch Type:     {0:s}\n".format(ARCHType.ValueToStr(self.ArchType))
-        msg += "Image Type:    {0:s}\n".format(IMGType.ValueToStr(self.ImageType))
-        msg += "Compression:   {0:s}\n".format(COMPRESSType.ValueToStr(self.Compression))
+        msg += "OS Type:       {0:s}\n".format(OSType.value_to_str(self.OsType))
+        msg += "Arch Type:     {0:s}\n".format(ARCHType.value_to_str(self.ArchType))
+        msg += "Image Type:    {0:s}\n".format(IMGType.value_to_str(self.ImageType))
+        msg += "Compression:   {0:s}\n".format(COMPRESSType.value_to_str(self.Compression))
         msg += "Image Name:    {0:s}\n".format(self.Name)
         return msg
 

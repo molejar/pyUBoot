@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 
-# Copyright 2016 Martin Olejar
+# Copyright (c) 2017 Martin Olejar, martin.olejar@gmail.com
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+# Software.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
 import sys
 import click
-
-# PyUBoot module
 import uboot
 
 # Application error code
@@ -55,10 +54,10 @@ class UInt(click.ParamType):
 UINT = UInt()
 
 # --
-ARCT = uboot.ARCHType.GetNames(lower=True)
-OST  = uboot.OSType.GetNames(lower=True)
-IMGT = uboot.IMGType.GetNames(lower=True)
-COMT = uboot.COMPRESSType.GetNames(lower=True)
+ARCT = uboot.ARCHType.get_names(lower=True)
+OST  = uboot.OSType.get_names(lower=True)
+IMGT = uboot.IMGType.get_names(lower=True)
+COMT = uboot.COMPRESSType.get_names(lower=True)
 
 
 # U-Boot mkimg: Base options
@@ -97,7 +96,7 @@ def info(file):
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):
     """ Create new image from attached files """
     try:
-        img_type = uboot.IMGType.StrToValue(imgtype)
+        img_type = uboot.IMGType.str_to_value(imgtype)
 
         if img_type == int(uboot.IMGType.MULTI):
             img = uboot.MultiImage
@@ -116,9 +115,9 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
             with open(infiles[0], 'rb') as f:
                 img.data = f.read()
 
-        img.ArchType = uboot.ARCHType.StrToValue(arch)
-        img.OsType = uboot.OSType.StrToValue(ostype)
-        img.Compression = uboot.COMPRESSType.StrToValue(compress)
+        img.ArchType = uboot.ARCHType.str_to_value(arch)
+        img.OsType = uboot.OSType.str_to_value(ostype)
+        img.Compression = uboot.COMPRESSType.str_to_value(compress)
         img.LoadAddress = laddr
         img.EntryPoint = epaddr
         img.Name = name
