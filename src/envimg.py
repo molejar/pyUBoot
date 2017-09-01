@@ -56,6 +56,27 @@ def info(mark, file):
     click.echo(str(envimg))
 
 
+# U-Boot envimg: Export U-Boot environment variables
+@cli.command(short_help="Export U-Boot environment variables")
+@click.argument('mark', nargs=1, type=click.STRING)
+@click.argument('file', nargs=1, type=click.Path(exists=True))
+@click.argument('fenv', nargs=1, type=click.Path())
+def export(mark, file, fenv):
+    """ Export U-Boot environment variables """
+    try:
+        envimg = uboot.EnvImgOld(start_string=mark)
+        envimg.open_img(file)
+
+        with open(fenv, 'w') as f:
+            f.write(envimg.store())
+
+    except Exception as e:
+        click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+    click.secho("Environment variables saved into: %s" % fenv)
+
+
 # U-Boot envimg: Update U-Boot environment variables
 @cli.command(short_help="Update U-Boot environment variables")
 @click.option('-f', '--fenv', type=click.Path(exists=True), help="The file with environment variables")

@@ -19,6 +19,7 @@ Options:
 
 Commands:
   info     List U-Boot environment variables
+  export   Export U-Boot environment variables
   replace  Replace U-Boot environment variables
   update   Update U-Boot environment variables
 ```
@@ -27,7 +28,7 @@ Commands:
 
 #### $ envimg info [OPTIONS] MARK FILE
 
-Print the content of U-Boot environment variables inside U-Boot image.
+Print the content of U-Boot environment variables located inside image.
 
 ##### options:
 * **-?, --help** - Show help message and exit
@@ -46,6 +47,23 @@ EnVar Content:
 - bootcmd = mmc dev ${mmcdev}; mmc dev ${mmcdev}; if mmc rescan; then run mmcboot; else run netboot; fi;
 - bootdelay = 3
 - ...
+```
+
+<br>
+
+#### $ envimg export [OPTIONS] MARK FILE FENV
+
+Export environment variables from U-Boot image.
+
+##### options:
+* **-?, --help** - Show help message and exit
+
+##### Example:
+
+```sh
+$ envimg export bootcmd= u-boot.imx env.txt
+
+Environment variables saved into: env.txt
 ```
 
 <br>
