@@ -47,17 +47,17 @@ class UInt(click.ParamType):
             else:
                 return int(value, 0)
         except:
-            self.fail('%s is not a valid value' % value, param, ctx)
+            self.fail('{} is not a valid value'.format(value), param, ctx)
 
 
 # Create instances of custom argument types
 UINT = UInt()
 
 # --
-ARCT = uboot.ARCHType.get_names(lower=True)
-OST  = uboot.OSType.get_names(lower=True)
-IMGT = uboot.IMGType.get_names(lower=True)
-COMT = uboot.COMPRESSType.get_names(lower=True)
+ARCT = uboot.EnumArchType.all_names()
+OST  = uboot.EnumOsType.all_names()
+IMGT = uboot.EnumImageType.all_names()
+COMT = uboot.EnumCompressionType.all_names()
 
 
 # U-Boot mkimg: Base options
@@ -68,7 +68,7 @@ def cli():
 
 
 # U-Boot mkimg: List image content
-@cli.command(short_help="List image content")
+@cli.command(short_help="Show image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
 def info(file):
     """ List image content """
@@ -83,7 +83,7 @@ def info(file):
 
 
 # U-Boot mkimg: Create new image from attached files
-@cli.command(short_help="Create new image from attached files")
+@cli.command(short_help="Create U-Boot image from attached files")
 @click.option('-a', '--arch', type=click.Choice(ARCT), default='arm', show_default=True, help='Architecture')
 @click.option('-o', '--ostype', type=click.Choice(OST), default='linux', show_default=True, help='Operating system')
 @click.option('-i', '--imgtype', type=click.Choice(IMGT), default='firmware', show_default=True, help='Image type')
@@ -96,16 +96,16 @@ def info(file):
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):
     """ Create new image from attached files """
     try:
-        img_type = uboot.IMGType.str_to_value(imgtype)
+        img_type = uboot.EnumImageType.value(imgtype)
 
-        if img_type == int(uboot.IMGType.MULTI):
+        if img_type == uboot.EnumImageType.MULTI:
             img = uboot.MultiImage
             for file in infiles:
                 with open(file, 'rb') as f:
                     simg = uboot.parse_img(f.read())
                     img.append(simg)
 
-        elif img_type == int(uboot.IMGType.SCRIPT):
+        elif img_type == uboot.EnumImageType.MULTI:
             img = uboot.ScriptImage()
             with open(infiles[0], 'r') as f:
                 img.load(f.read())
@@ -113,14 +113,14 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
         else:
             img = uboot.StdImage(image=img_type)
             with open(infiles[0], 'rb') as f:
-                img.data = f.read()
+                img.data = bytearray(f.read())
 
-        img.ArchType = uboot.ARCHType.str_to_value(arch)
-        img.OsType = uboot.OSType.str_to_value(ostype)
-        img.Compression = uboot.COMPRESSType.str_to_value(compress)
-        img.LoadAddress = laddr
-        img.EntryPoint = epaddr
-        img.Name = name
+        img.header.arch_type = uboot.EnumArchType.value(arch)
+        img.header.os_type = uboot.EnumOsType.value(ostype)
+        img.header.compression = uboot.EnumCompressionType.value(compress)
+        img.header.load_address = laddr
+        img.header.entry_point = epaddr
+        img.header.name = name
 
         click.echo(img.info())
         with open(outfile, 'wb') as f:
@@ -133,15 +133,45 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
     click.secho("\n Created Image: %s" % outfile)
 
 
+# U-Boot mkimg: Create new executable FDT image
+@cli.command(short_help="Create U-Boot FDT image from *.its file")
+@click.option('-a', '--align', type=UINT, default=None, help="Make the blob align to the <bytes>")
+@click.option('-p', '--padding', type=UINT, default=None, help="Add padding to the blob of <bytes> long")
+@click.option('-s', '--size', type=UINT, default=None, help="Make the blob at least <bytes> long")
+@click.argument('outfile', nargs=1, type=click.Path(readable=False))
+@click.argument('infile',  nargs=1, type=click.Path(exists=True))
+def create_fdt(align, padding, size, outfile, infile):
+    """ Create U-Boot FDT image from *.its file """
+
+    try:
+        raise Exception("Command not implemented yet")
+
+        img = uboot.FdtImage()
+
+        with open(infile, 'r') as f:
+            pass
+
+        # TODO: Finish U-Boot FDT Image creator
+
+        with open(outfile, 'wb') as f:
+            f.write(img.export())
+
+    except Exception as e:
+        click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+    click.secho("\n Created Image: %s" % outfile)
+
+
 # U-Boot mkimg: Extract image content
-@cli.command(short_help="Extract image content")
+@cli.command(short_help="Extract content from U-Boot image")
 @click.argument('file',  nargs=1, type=click.Path(exists=True))
 def extract(file):
     """ Extract image content """
 
     def get_file_ext(img):
         ext = ('bin', 'gz', 'bz2', 'lzma', 'lzo', 'lz4')
-        return ext[img.Compression]
+        return ext[img.compression]
 
     try:
         with open(file, 'rb') as f:
@@ -153,13 +183,15 @@ def extract(file):
         dest_dir = os.path.normpath(os.path.join(file_path, file_name + ".ex"))
         os.makedirs(dest_dir, exist_ok=True)
 
-        if img.ImageType == int(uboot.IMGType.MULTI):
+        if isinstance(img, uboot.FdtImage):
+            pass
+        elif img.image_type == uboot.EnumImageType.MULTI:
             n = 0
             for simg in img:
                 with open(os.path.join(dest_dir, 'image_{0:02d}.bin'.format(n)), 'wb') as f:
                     f.write(simg.eport())
                 n += 1
-        elif img.ImageType == int(uboot.IMGType.SCRIPT):
+        elif img.image_type == uboot.EnumImageType.SCRIPT:
             with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
                 f.write(img.store())
 
