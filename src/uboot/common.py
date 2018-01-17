@@ -29,10 +29,10 @@ class Enum(object):
 
     @classmethod
     def value(cls, name):
-        if isinstance(name, str):
-            raise Exception()
+        if not isinstance(name, str):
+            raise Exception("Item name must be a string type !")
         for item in cls._nfo:
-            if name is item[1]:
+            if name == item[1]:
                 return item[0]
         raise ValueError("Unsupported name: %s" % name)
 
@@ -54,7 +54,7 @@ class Enum(object):
     @classmethod
     def desc(cls, value):
         for item in cls._nfo:
-            if isinstance(value, str) and value is item[1]:
+            if isinstance(value, str) and value == item[1]:
                 return item[2]
             elif value == item[0]:
                 return item[2]
