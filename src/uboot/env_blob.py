@@ -141,21 +141,23 @@ class EnvBlob(object):
 
         return txt_data
 
-    def parse(self, data, offset=0):
+    @classmethod
+    def parse(cls, data, offset=0, bigendian=False):
         """ Parse the u-boot environment variables from bytearray.
             :param data: The data in bytes array
             :param offset: The offset of input data
+            :param bigendian: The endian type
         """
-        self._env = collections.OrderedDict()
+        env = cls(bigendian=bigendian)
 
-        fmt = ">IB" if self._bigendian else "<IB"
+        fmt = ">IB" if env.bigendian else "<IB"
         (read_crc, tmp) = struct.unpack_from(fmt, data, offset)
 
         if tmp == 0x01:
-            self._redundant = True
+            env.redundant = True
             read_data = data[offset + 5:]
         else:
-            self._redundant = False
+            env.redundant = False
             read_data = data[offset + 4:]
 
         calc_crc = binascii.crc32(read_data) & 0xffffffff
@@ -169,7 +171,9 @@ class EnvBlob(object):
             if not s or s.startswith('\xFF') or s.startswith('\x00'):
                 break
             key, value = s.split('=', 1)
-            self._env[key] = value
+            env.set(key, value)
+
+        return env
 
     def export(self):
         """ Export the u-boot environment variables into bytearray.
@@ -196,7 +200,7 @@ class EnvBlob(object):
         crc = binascii.crc32(env_blob) & 0xffffffff
 
         fmt = ">I" if self._bigendian else "<I"
-        ret = struct.pack(fmt + "B", crc, 0x01) if self._redundant else struct.pack(fmt, crc)
-        ret += env_blob
+        crc_blob = struct.pack(fmt + "B", crc, 0x01) if self._redundant else struct.pack(fmt, crc)
+        env_blob = crc_blob + env_blob
 
-        return ret
+        return env_blob

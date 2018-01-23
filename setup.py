@@ -15,24 +15,26 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
+
 from setuptools import setup, find_packages
 
+# Check python version
+import sys
 if sys.version_info[0] == 2:
     sys.exit('Sorry, Python 2.x is not supported')
 
 sys.path.insert(0, './src')
-import uboot
+from uboot import __version__, __license__, __author__, __contact__
 
 setup(
     name='uboot',
-    version=uboot.__version__,
-    license=uboot.__license__,
-    author=uboot.__author__,
-    author_email=uboot.__contact__,
+    author=__author__,
+    version=__version__,
+    license=__license__,
+    author_email=__contact__,
     url='https://github.com/molejar/pyUBoot',
     platforms="Mac OSX, Windows, Linux",
-    install_requires=['click>=5.0'],
+    install_requires=['click>=5.0', 'fdt'],
     packages=find_packages('src'),
     package_dir={'':'src'},
     classifiers=[

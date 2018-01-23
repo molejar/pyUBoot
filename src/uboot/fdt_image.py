@@ -13,20 +13,32 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import pyfdt
+
+import fdt
 
 from .common import EnumArchType, EnumOsType, EnumImageType, EnumCompressionType
+
+
+class ImgItem(object):
+
+    def __init__(self):
+        pass
 
 
 class FdtImage(object):
 
     def __init__(self):
+        self.its = None
+        self.images = None
         self.padding = 0
         self.align = 0
-        self.its = None
 
     def load(self, text, root_dir=''):
-        fdt = pyfdt.parse_dts(text, root_dir)
+        dt = fdt.parse_dts(text, root_dir)
+        images = dt.rootnode.get_item_by_name("images", fdt.Node)
+        config = dt.rootnode.get_item_by_name("configurations", fdt.Node)
+        if images is None or config is None:
+            raise Exception(" ")
 
     def export(self, size=None):
         if self.its is None:
@@ -35,5 +47,5 @@ class FdtImage(object):
 
     @classmethod
     def parse(cls, data, offset=0):
-        itb = pyfdt.parse_dtb(data[offset:])
+        itb = fdt.parse_dtb(data[offset:])
 

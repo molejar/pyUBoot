@@ -119,7 +119,7 @@ class EnumImageType(Enum):
     OMAP = 12  # TI OMAP Config Header Image
     AIS = 13  # TI Davinci IS Image
 
-    KNOLOAD = 14  # OS Kernel Image, can run from any load addres
+    KNOLOAD = 14  # OS Kernel Image, can run from any load address
     PBL = 15  # Freescale PBL Boot Image
     MXS = 16  # Freescale MXS Boot Image
     GP = 17  # TI Keystone GP-Header Image

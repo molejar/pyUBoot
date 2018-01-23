@@ -67,15 +67,15 @@ def cli():
 @click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="The offset of input file")
 @click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="The environment blob size")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
-def info(offset, size, file):
+def info(offset, size, bigendian, file):
     """ List image content """
     try:
-        env = uboot.EnvBlob()
         with open(file, "rb") as f:
             f.seek(offset)
             data = f.read(size)
-            env.parse(data)
-            env.size = len(data)
+
+        env = uboot.EnvBlob.parse(data, 0, bigendian)
+        env.size = size
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
@@ -112,10 +112,10 @@ def create(size, redundant, bigendian, infile, outfile):
 # U-Boot mkenv: Extract image content
 @cli.command(short_help="Extract image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
-@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="The offset of input file")
 @click.option('-b', '--bigendian', is_flag=True, help="The target is big endian (default is little endian)")
+@click.option('-o', '--offset', type=UINT, default=0, show_default=True, help="The offset of input file")
 @click.option('-s', '--size', type=UINT, default=8192, show_default=True, help="The environment blob size")
-def extract(offset, size, file):
+def extract(offset, size, bigendian, file):
     """ Extract image content """
     try:
         fileName, _ = os.path.splitext(file)
@@ -123,7 +123,10 @@ def extract(offset, size, file):
 
         with open(file, "rb") as f:
             f.seek(offset)
-            env.parse(f.read())
+            data = f.read(size)
+
+        env = uboot.EnvBlob.parse(data, 0, bigendian)
+        env.size = size
 
         with open(fileName + '.txt', 'w') as f:
             f.write(env.store())
