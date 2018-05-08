@@ -5,6 +5,7 @@ before_install:
   - pip install pytest pytest-console-scripts
   - pip install pytest-cov
   - pip install coveralls
+  - pip install -r requirements.txt
 install:
   - pip install -e .
 script:
