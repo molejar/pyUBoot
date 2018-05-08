@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import shutil
 import pytest
 
 # Used Directories
@@ -32,13 +33,13 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    # Delete created files
-    os.remove(SCRIPT_BIN_TEMP)
+    # Delete temp directory
+    shutil.rmtree(TEMP_DIR)
 
 
 @pytest.mark.script_launch_mode('subprocess')
 def test_mkimg_create(script_runner):
-    ret = script_runner.run('mkimg', 'create', '-i script', SCRIPT_BIN_TEMP, SCRIPT_TXT)
+    ret = script_runner.run('mkimg', 'create', '-i', 'script', SCRIPT_BIN_TEMP, SCRIPT_TXT)
     assert ret.success
 
 
@@ -56,7 +57,7 @@ def test_mkimg_extract(script_runner):
 
 @pytest.mark.script_launch_mode('subprocess')
 def test_mkimg_create_itb(script_runner):
-    ret = script_runner.run('mkimg', 'create_itb', UBOOT_ITB_TEMP, UBOOT_ITS)
+    ret = script_runner.run('mkimg', 'create_itb', '-o', UBOOT_ITB_TEMP, UBOOT_ITS)
     assert ret.success
 
 
