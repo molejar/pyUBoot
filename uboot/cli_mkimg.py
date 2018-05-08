@@ -1,19 +1,16 @@
-#!/usr/bin/env python3
-
-# Copyright (c) 2017 Martin Olejar, martin.olejar@gmail.com
+# Copyright 2017 Martin Olejar
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 import sys
@@ -67,11 +64,10 @@ def cli():
     click.echo()
 
 
-# U-Boot mkimg: List image content
-@cli.command(short_help="Show image content")
+@cli.command(short_help="Show old image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
 def info(file):
-    """ List image content """
+    """ List old image content """
     try:
         with open(file, 'rb') as f:
             img = uboot.parse_img(f.read())
@@ -82,8 +78,21 @@ def info(file):
         sys.exit(ERROR_CODE)
 
 
-# U-Boot mkimg: Create new image from attached files
-@cli.command(short_help="Create U-Boot image from attached files")
+@cli.command(short_help="Show new image content")
+@click.argument('file', nargs=1, type=click.Path(exists=True))
+def info_itb(file):
+    """ List new image content """
+    try:
+        with open(file, 'rb') as f:
+            img = uboot.parse_itb(f.read())
+            click.echo(img.info())
+
+    except Exception as e:
+        click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+
+@cli.command(short_help="Create old U-Boot image from attached files")
 @click.option('-a', '--arch', type=click.Choice(ARCT), default='arm', show_default=True, help='Architecture')
 @click.option('-o', '--ostype', type=click.Choice(OST), default='linux', show_default=True, help='Operating system')
 @click.option('-i', '--imgtype', type=click.Choice(IMGT), default='firmware', show_default=True, help='Image type')
@@ -94,7 +103,7 @@ def info(file):
 @click.argument('outfile', nargs=1, type=click.Path(readable=False))
 @click.argument('infiles',  nargs=-1, type=click.Path(exists=True))
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):
-    """ Create new image from attached files """
+    """ Create old U-Boot image from attached files """
     try:
         img_type = uboot.EnumImageType.value(imgtype)
 
@@ -133,28 +142,24 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
     click.secho("\n Created Image: %s" % outfile)
 
 
-# U-Boot mkimg: Create new executable FDT image
-@cli.command(short_help="Create U-Boot FDT image from *.its file")
+@cli.command(short_help="Create new U-Boot image from *.its file")
+@click.option('-o', '--outfile', type=click.Path(readable=False), default=None, help="Output file")
+@click.option('-p', '--padding', type=UINT, default=0, help="Add padding to the blob of <bytes> long")
 @click.option('-a', '--align', type=UINT, default=None, help="Make the blob align to the <bytes>")
-@click.option('-p', '--padding', type=UINT, default=None, help="Add padding to the blob of <bytes> long")
 @click.option('-s', '--size', type=UINT, default=None, help="Make the blob at least <bytes> long")
-@click.argument('outfile', nargs=1, type=click.Path(readable=False))
-@click.argument('infile',  nargs=1, type=click.Path(exists=True))
-def create_fdt(align, padding, size, outfile, infile):
-    """ Create U-Boot FDT image from *.its file """
+@click.argument('itsfile',  nargs=1, type=click.Path(exists=True))
+def create_itb(outfile, padding, align, size, itsfile):
+    """ Create new U-Boot image from *.its file """
 
     try:
-        raise Exception("Command not implemented yet")
+        if outfile is None:
+            outfile = os.path.splitext(itsfile)[0] + ".itb"
 
-        img = uboot.FdtImage()
-
-        with open(infile, 'r') as f:
-            pass
-
-        # TODO: Finish U-Boot FDT Image creator
+        with open(itsfile, 'r') as f:
+            img = uboot.parse_its(f.read(), os.path.dirname(itsfile))
 
         with open(outfile, 'wb') as f:
-            f.write(img.export())
+            f.write(img.to_itb(padding, align, size))
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")
@@ -163,11 +168,10 @@ def create_fdt(align, padding, size, outfile, infile):
     click.secho("\n Created Image: %s" % outfile)
 
 
-# U-Boot mkimg: Extract image content
-@cli.command(short_help="Extract content from U-Boot image")
+@cli.command(short_help="Extract content from old U-Boot image")
 @click.argument('file',  nargs=1, type=click.Path(exists=True))
 def extract(file):
-    """ Extract image content """
+    """ Extract content from old U-Boot image """
 
     def get_file_ext(img):
         ext = ('bin', 'gz', 'bz2', 'lzma', 'lzo', 'lz4')
@@ -183,15 +187,13 @@ def extract(file):
         dest_dir = os.path.normpath(os.path.join(file_path, file_name + ".ex"))
         os.makedirs(dest_dir, exist_ok=True)
 
-        if isinstance(img, uboot.FdtImage):
-            pass
-        elif img.image_type == uboot.EnumImageType.MULTI:
+        if img.header.image_type == uboot.EnumImageType.MULTI:
             n = 0
             for simg in img:
                 with open(os.path.join(dest_dir, 'image_{0:02d}.bin'.format(n)), 'wb') as f:
                     f.write(simg.eport())
                 n += 1
-        elif img.image_type == uboot.EnumImageType.SCRIPT:
+        elif img.header.image_type == uboot.EnumImageType.SCRIPT:
             with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
                 f.write(img.store())
 
@@ -201,6 +203,35 @@ def extract(file):
 
         with open(os.path.join(dest_dir, 'info.txt'), 'w') as f:
             f.write(img.info())
+
+    except Exception as e:
+        click.echo(str(e) if str(e) else "Unknown Error !")
+        sys.exit(ERROR_CODE)
+
+    click.secho("\n Image extracted into dir: %s" % dest_dir)
+
+
+@cli.command(short_help="Extract content from new U-Boot image")
+@click.argument('file',  nargs=1, type=click.Path(exists=True))
+def extract_itb(file):
+    """ Extract content from new U-Boot image """
+
+    try:
+        with open(file, 'rb') as f:
+            img = uboot.parse_itb(f.read())
+
+        file_path, file_name = os.path.split(file)
+        dest_dir = os.path.normpath(os.path.join(file_path, file_name + ".ex"))
+        os.makedirs(dest_dir, exist_ok=True)
+
+        its, images = img.to_its()
+
+        with open(os.path.join(dest_dir, file_name.split('.')[0] + '.its'), 'w') as f:
+            f.write(its)
+
+        for name, data in images.items():
+            with open(os.path.join(dest_dir, name + '.bin'), 'wb') as f:
+                f.write(data)
 
     except Exception as e:
         click.echo(str(e) if str(e) else "Unknown Error !")

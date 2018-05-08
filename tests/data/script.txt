@@ -1,0 +1,18 @@
+# U-Boot Script
+
+echo '>> Run Script ...'
+setenv autoload 'no'
+dhcp 
+setenv serverip 192.168.1.162
+setenv hostname 'imx7dsb'
+setenv netdev  'eth0'
+setenv nfsroot '/srv/nfs/imx7d'
+setenv imgfile '/imx7d/zImage'
+setenv fdtfile '/imx7d/imx7d-sdb.dtb'
+setenv fdtaddr 0x83000000
+setenv imgaddr 0x80800000
+setenv imgload 'tftp ${imgaddr} ${imgfile}'
+setenv fdtload 'tftp ${fdtaddr} ${fdtfile}'
+setenv netargs 'setenv bootargs console=${console},${baudrate} root=/dev/nfs rw nfsroot=${serverip}:${nfsroot},v3,tcp ip=dhcp'
+setenv netboot 'echo Booting from net ...; run netargs; run imgload; run fdtload; bootz ${imgaddr} - ${fdtaddr};'
+run netboot

@@ -1,0 +1,13 @@
+language: python
+python:
+  - "3.6"
+before_install:
+  - pip install pytest pytest-console-scripts
+  - pip install pytest-cov
+  - pip install coveralls
+install:
+  - pip install -e .
+script:
+  - py.test --cov=uboot tests/*
+after_success:
+  - coveralls

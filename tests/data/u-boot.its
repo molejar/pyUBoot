@@ -1,0 +1,33 @@
+/dts-v1/;
+
+/ {
+	description = "i.MX7D U-Boot Image";
+
+	images {
+		uboot@1 {
+			description = "U-Boot (32-bit)";
+			data = /incbin/("u-boot.bin");
+			type = "standalone";
+			arch = "arm";
+			compression = "none";
+			load = <0x40200000>;
+		};
+
+		fdt@1 {
+			description = "FDT i.MX7D-SDB";
+			data = /incbin/("imx7d-sdb.dtb");
+			type = "flat_dt";
+			compression = "none";
+		};
+	};
+
+	configurations {
+		default = "config@1";
+
+		config@1 {
+			description = "fsl-imx7d-sdb";
+			firmware = "uboot@1";
+			fdt = "fdt@1";
+		};
+	};
+};

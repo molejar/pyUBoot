@@ -1,17 +1,16 @@
-# Copyright (c) 2017 Martin Olejar, martin.olejar@gmail.com
+# Copyright 2017 Martin Olejar
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import time
 import zlib
@@ -161,6 +160,16 @@ class Header(object):
     def __repr__(self):
         return self.info()
 
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+    def __eq__(self, obj):
+        if not isinstance(obj, Header):
+            return False
+        if self.header_crc != obj.header_crc:
+            return False
+        return True
+
     def info(self):
         msg  = "Image Name:    {0:s}\n".format(self.name)
         msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.time_stamp)))
@@ -232,6 +241,9 @@ class BaseImage(object):
     def __repr__(self):
         return self.info()
 
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
     def info(self):
         self.export()
         return self.header.info()
@@ -257,6 +269,15 @@ class StdImage(BaseImage):
         """
         super().__init__(**kwargs)
         self.data = data if data else bytearray()
+
+    def __eq__(self, obj):
+        if not isinstance(obj, StdImage):
+            return False
+        if self.__len__() != len(obj):
+            return False
+        if self.data != obj.data:
+            return False
+        return True
 
     def __len__(self):
         return len(self.data)
@@ -319,6 +340,15 @@ class FwImage(StdImage):
         # Set The Image Type to Firmware
         self.header.image_type = EnumImageType.FIRMWARE
 
+        def __eq__(self, obj):
+            if not isinstance(obj, FwImage):
+                return False
+            if self.__len__() != len(obj):
+                return False
+            if self.data != obj.data:
+                return False
+            return True
+
 
 class ScriptImage(BaseImage):
 
@@ -344,6 +374,15 @@ class ScriptImage(BaseImage):
         # Set The Image Type to Script
         self.header.image_type = EnumImageType.SCRIPT
         self._cmds = cmds if cmds else []
+
+    def __eq__(self, obj):
+        if not isinstance(obj, ScriptImage):
+            return False
+        if self.__len__() != len(obj):
+            return False
+        if self.cmds != obj.cmds:
+            return False
+        return True
 
     def __len__(self):
         return len(self._cmds)
@@ -471,6 +510,16 @@ class MultiImage(BaseImage):
         self.header.image_type = EnumImageType.MULTI
         self._imgs = imgs if imgs else []
 
+    def __eq__(self, obj):
+        if not isinstance(obj, MultiImage):
+            return False
+        if self.__len__() != len(obj):
+            return False
+        for img in self._imgs:
+            if img not in obj:
+                return False
+        return True
+
     def __len__(self):
         return len(self._imgs)
 
@@ -581,7 +630,7 @@ def get_img_type(data, offset=0):
     """
     while True:
         if (offset + Header.SIZE) > len(data):
-            raise Exception("Error: Not an U-Boot image !")
+            raise Exception("Not an U-Boot image !")
 
         (header_mn, header_crc,) = unpack_from('!2L', data, offset)
         # Check the magic number if is U-Boot image
@@ -634,7 +683,7 @@ def parse_img(data, offset=0):
     (img_type, offset) = get_img_type(bytearray(data), offset)
 
     if not EnumImageType.validate(img_type):
-        raise Exception("Not valid image type")
+        raise Exception("Not a valid image type")
 
     if img_type == EnumImageType.MULTI:
         img = MultiImage.parse(data, offset)
