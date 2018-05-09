@@ -11,16 +11,19 @@ For printing a general info of usage this tool execute `mkimg -?`.
 ```sh
 $ Usage: mkimg [OPTIONS] COMMAND [ARGS]...
 
-  The U-Boot Image Tool
+   The U-Boot Image Tool
 
-  Options:
-    -v, --version  Show the version and exit.
-    -?, --help     Show this message and exit.
+ Options:
+   -v, --version  Show the version and exit.
+   -?, --help     Show this message and exit.
 
-  Commands:
-    create   Create new image from attached file
-    extract  Extract image content
-    info     List image content
+ Commands:
+   create       Create old U-Boot image from attached files
+   create_itb   Create new U-Boot image from *.its file
+   extract      Extract content from old U-Boot image
+   extract_itb  Extract content from new U-Boot image
+   info         Show old image content
+   info_itb     Show new image content
 ```
 
 ## Commands

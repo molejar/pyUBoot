@@ -121,7 +121,8 @@ class FdtImage(object):
         self.configs.append(item)
 
     def to_its(self, rpath=None, tabsize=4):
-        """
+        """ Export to ITS format
+
         :param rpath:
         :param tabsize:
         :return:
@@ -134,27 +135,30 @@ class FdtImage(object):
             img_clone.append(fdt.PropIncBin("data", None, img_name, rpath))
             images.append(img_clone)
             data[img_name] = self.img_data[img.name]
-        # ...
+
+        # Check default config
         if self.def_config is None:
             raise Exception("Default config not defined")
         if self.def_config not in [cnf.name for cnf in self.configs]:
             raise Exception("Default config \"{}\" doesn't exist".format(self.def_config))
 
-        configs = fdt.Node("configurations", nodes=self.configs)
-        configs.append(fdt.PropStrings("default", self.def_config))
-        # ...
+        # Add images and configs
         root_node = fdt.Node('/')
         root_node.append(fdt.PropStrings("description", self.description))
         root_node.append(images)
+        configs = fdt.Node("configurations", nodes=self.configs)
+        configs.append(fdt.PropStrings("default", self.def_config))
         root_node.append(configs)
-        # ...
+
+        # Crete ITS
         its = "/dts-v1/;\n"
         its += '\n'
         its += root_node.to_dts(tabsize)
         return its, data
 
     def to_itb(self, padding=0, align=None, size=None):
-        """
+        """ Export to ITB format
+
         :param padding:
         :param align:
         :param size:
@@ -213,7 +217,8 @@ class FdtImage(object):
 
 
 def parse_its(text, root_dir=''):
-    """
+    """ Parse ITS file
+
     :param text:
     :param root_dir:
     :return:
@@ -246,7 +251,8 @@ def parse_its(text, root_dir=''):
 
 
 def parse_itb(data, offset=0):
-    """
+    """ Parse ITB data-blob
+
     :param data:
     :param offset:
     :return:

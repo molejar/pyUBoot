@@ -1,4 +1,4 @@
-# Copyright 2017 Martin Olejar
+# Copyright 2018 Martin Olejar
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ from .old_image import StdImage, FwImage, ScriptImage, MultiImage, get_img_type,
 from .fdt_image import FdtImage, parse_its, parse_itb
 from .env_image import EnvImgOld
 from .env_blob import EnvBlob
+
 
 __author__  = "Martin Olejar"
 __contact__ = "martin.olejar@gmail.com"
@@ -48,6 +49,7 @@ __all__ = [
 
 def parse_blob(data, offset=0):
     """ Universal parser for binary blob
+
     :param data:
     :param offset:
     :return:

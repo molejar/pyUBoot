@@ -1,8 +1,8 @@
 U-Boot Environment Blob Tool
 ============================
 
-The `mkenv` is a tool to generate a U-Boot environment binary blob from a text file or extract U-Boot environment variables from a binary blob.
-It's implementing similar functionality as `mkenvimage` tool natively used in Linux.
+The `mkenv` is a tool to generate a U-Boot environment binary blob from a text file or extract U-Boot environment 
+variables from a binary blob. It's implementing similar functionality as `mkenvimage` tool natively used in Linux.
 
 Usage
 -----

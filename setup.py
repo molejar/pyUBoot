@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2017 Martin Olejar
+# Copyright 2018 Martin Olejar
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ setup(
     description='Open Source library for manipulating with U-Boot images and environment variables',
     long_description=long_description(),
     python_requires='>=3.6',
-    install_requires=['click>=5.0', 'fdt>=0.1.1'],
+    install_requires=['click>=5.0', 'fdt>=0.1.2'],
     packages=['uboot'],
     classifiers=[
         'Programming Language :: Python :: 3',

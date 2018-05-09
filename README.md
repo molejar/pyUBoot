@@ -2,24 +2,29 @@ pyUBoot
 =======
 
 [![Build Status](https://travis-ci.org/molejar/pyUBoot.svg?branch=master)](https://travis-ci.org/molejar/pyUBoot)
+[![Coverage Status](https://coveralls.io/repos/github/molejar/pyUBoot/badge.svg?branch=master)](https://coveralls.io/github/molejar/pyUBoot?branch=master)
 
 pyUBoot is an Open Source python based library for manipulating with U-Boot images and environment variables. Is 
 distributed with following command-line utilities (tools):
 
-* [envimg](doc/envimg.md) - a tool for editing environment variables inside U-Boot image
-* [mkenv](doc/mkenv.md) - a tool to generate/extract U-Boot environment variables into/from a binary blob
-* [mkimg](doc/mkimg.md) - a tool for manipulation with U-Boot executable images (zImage, Scripts, ...)
+* [envimg](docs/envimg.md) - a tool for editing environment variables inside U-Boot image
+* [mkenv](docs/mkenv.md) - a tool to generate/extract U-Boot environment variables into/from a binary blob
+* [mkimg](docs/mkimg.md) - a tool for manipulation with U-Boot executable images (zImage, Scripts, ...)
 
 
 Dependencies
 ------------
 
-- [Python 3](https://www.python.org) - The interpreter
+- [Python](https://www.python.org) - Python 3.x interpreter
 - [Click](http://click.pocoo.org/6) - Python package for creating beautiful command line interface.
 - [pyFDT](https://github.com/molejar/pyFDT) - Python package for manipulation with Device Tree images.
 
 Installation
 ------------
+
+``` bash
+    $ pip install uboot
+```
 
 To install the latest version from master branch execute in shell following commands:
 
