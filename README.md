@@ -3,6 +3,8 @@ pyUBoot
 
 [![Build Status](https://travis-ci.org/molejar/pyUBoot.svg?branch=master)](https://travis-ci.org/molejar/pyUBoot)
 [![Coverage Status](https://coveralls.io/repos/github/molejar/pyUBoot/badge.svg?branch=master)](https://coveralls.io/github/molejar/pyUBoot?branch=master)
+[![PyPI Status](https://img.shields.io/pypi/v/uboot.svg)](https://pypi.python.org/pypi/uboot)
+[![Python Version](https://img.shields.io/pypi/pyversions/uboot.svg)](https://www.python.org)
 
 pyUBoot is an Open Source python based library for manipulating with U-Boot images and environment variables. Is 
 distributed with following command-line utilities (tools):
@@ -10,7 +12,6 @@ distributed with following command-line utilities (tools):
 * [envimg](docs/envimg.md) - a tool for editing environment variables inside U-Boot image
 * [mkenv](docs/mkenv.md) - a tool to generate/extract U-Boot environment variables into/from a binary blob
 * [mkimg](docs/mkimg.md) - a tool for manipulation with U-Boot executable images (zImage, Scripts, ...)
-
 
 Dependencies
 ------------

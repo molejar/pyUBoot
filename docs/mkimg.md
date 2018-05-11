@@ -26,7 +26,7 @@ $ Usage: mkimg [OPTIONS] COMMAND [ARGS]...
    info_itb     Show new image content
 ```
 
-## Commands
+## Commands for old U-Boot images
 
 #### $ mkimg info FILE
 
@@ -74,7 +74,6 @@ Extract U-Boot executable image
 $ mkimg extract script.bin
 
  Image extracted into dir: script.bin.ex
-
 ```
 
 <br>
@@ -99,5 +98,76 @@ Create U-Boot executable image (uImage, Script, ...)
 $ mkimg create -a arm -o linux -i script -c none script.bin script.txt
 
  Created Image: script.bin
-
 ```
+
+## Commands for new FDT U-Boot images
+
+#### $ mkimg info_itb FILE
+
+List new U-Boot image content in readable format
+
+##### Example:
+
+```sh
+$ mkimg info_itb image.itb
+
+FIT description: i.MX7D U-Boot Image
+Created:         Fri May 11 21:51:14 2018
+Default config:  config@1
+
+ IMG[0] uboot@1
+  size: 472.00 kB
+  description: U-Boot (32-bit)
+  type: standalone
+  arch: arm
+  compression: none
+  load: 0x40200000
+
+ IMG[1] fdt@1
+  size: 46.00 kB
+  description: FDT i.MX7D-SDB
+  type: flat_dt
+  compression: none
+
+ CFG[0] config@1
+  description: fsl-imx7d-sdb
+  firmware: uboot@1
+  fdt: fdt@1
+```
+
+<br>
+
+#### $ mkimg create_itb [OPTIONS] FILE
+
+Create new U-Boot image from *.its file 
+
+##### options:
+* **-o, --outfile** - Output path/file name
+* **-p, --padding** - Add padding to the blob of <bytes> long (default: 0)
+* **-a, --align** - Make the blob align to the <bytes> (default: 0)
+* **-s, --size** - Make the blob at least <bytes> long (default: none)
+* **-?, --help**   - Show help message and exit
+
+##### Example:
+
+```sh
+$ mkimg create_itb image.its
+
+ Created Image: image.itb
+```
+
+<br>
+
+#### $ mkimg extract_itb FILE
+
+Extract content from new U-Boot image (*.itb)
+
+##### Example:
+
+```sh
+$ mkimg extract_itb image.itb
+
+ Image extracted into dir: image.itb.ex
+```
+
+<br>

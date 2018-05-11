@@ -67,7 +67,7 @@ def cli():
 @cli.command(short_help="Show old image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
 def info(file):
-    """ List old image content """
+    """ List old image content in readable format """
     try:
         with open(file, 'rb') as f:
             img = uboot.parse_img(f.read())
@@ -81,7 +81,7 @@ def info(file):
 @cli.command(short_help="Show new image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
 def info_itb(file):
-    """ List new image content """
+    """ List new image content in readable format """
     try:
         with open(file, 'rb') as f:
             img = uboot.parse_itb(f.read())
@@ -230,7 +230,7 @@ def extract_itb(file):
             f.write(its)
 
         for name, data in images.items():
-            with open(os.path.join(dest_dir, name + '.bin'), 'wb') as f:
+            with open(os.path.join(dest_dir, name), 'wb') as f:
                 f.write(data)
 
     except Exception as e:
