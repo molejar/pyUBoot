@@ -18,6 +18,7 @@ from struct import pack, unpack_from, calcsize
 
 from .common import EnumArchType, EnumOsType, EnumImageType, EnumCompressionType
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Helper methods
 # ----------------------------------------------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ class Header(object):
 
     @os_type.setter
     def os_type(self, value):
-        assert EnumOsType.validate(value), "HEADER: Unknown Value of OS Type: %d" % value
+        assert EnumOsType.is_valid(value), "HEADER: Unknown Value of OS Type: %d" % value
         self._os_type = int(value)
 
     @property
@@ -69,7 +70,7 @@ class Header(object):
 
     @arch_type.setter
     def arch_type(self, value):
-        assert EnumArchType.validate(value), "HEADER: Unknown Value of Arch Type: %d" % value
+        assert EnumArchType.is_valid(value), "HEADER: Unknown Value of Arch Type: %d" % value
         self._arch_type = int(value)
 
     @property
@@ -78,7 +79,7 @@ class Header(object):
 
     @image_type.setter
     def image_type(self, value):
-        assert EnumImageType.validate(value), "HEADER: Unknown Value of Image Type: %d" % value
+        assert EnumImageType.is_valid(value), "HEADER: Unknown Value of Image Type: %d" % value
         self._image_type = int(value)
 
     @property
@@ -87,7 +88,7 @@ class Header(object):
 
     @compression.setter
     def compression(self, value):
-        assert EnumCompressionType.validate(value), "HEADER: Unknown Value of Compression Type: %d" % value
+        assert EnumCompressionType.is_valid(value), "HEADER: Unknown Value of Compression Type: %d" % value
         self._compression = int(value)
 
     @property
@@ -138,16 +139,16 @@ class Header(object):
                 raise Exception("The value of \"eaddr\" is not correct !")
         if 'os' in kwargs and kwargs['os'] is not None:
             val = kwargs['os']
-            self.os_type = val if isinstance(val, int) else EnumOsType.value(val)
+            self.os_type = val if isinstance(val, int) else EnumOsType[val]
         if 'arch' in kwargs and kwargs['arch'] is not None:
             val = kwargs['arch']
-            self.arch_type = val if isinstance(val, int) else EnumArchType.value(val)
+            self.arch_type = val if isinstance(val, int) else EnumArchType[val]
         if 'image' in kwargs and kwargs['image'] is not None:
             val = kwargs['image']
-            self.image_type = val if isinstance(val, int) else EnumImageType.value(val)
+            self.image_type = val if isinstance(val, int) else EnumImageType[val]
         if 'compress' in kwargs and kwargs['compress'] is not None:
             val = kwargs['compress']
-            self.compression = val if isinstance(val, int) else EnumCompressionType.value(val)
+            self.compression = val if isinstance(val, int) else EnumCompressionType[val]
         if 'name' in kwargs and kwargs['name'] is not None:
             self.name = kwargs['name']
 
@@ -173,10 +174,10 @@ class Header(object):
     def info(self):
         msg  = "Image Name:    {0:s}\n".format(self.name)
         msg += "Created:       {0:s}\n".format(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime(self.time_stamp)))
-        msg += "Image Type:    {0:s} {1:s} {2:s} ({3:s})\n".format(EnumArchType.name(self.arch_type),
-                                                                   EnumOsType.name(self.os_type),
-                                                                   EnumImageType.name(self.image_type),
-                                                                   EnumCompressionType.name(self.compression))
+        msg += "Image Type:    {0:s} {1:s} {2:s} ({3:s})\n".format(EnumArchType[self.arch_type],
+                                                                   EnumOsType[self.os_type],
+                                                                   EnumImageType[self.image_type],
+                                                                   EnumCompressionType[self.compression])
         msg += "Data Size:     {0:.02f} kB\n".format(self.data_size / 1024)
         msg += "Load Address:  0x{0:08X}\n".format(self.load_address)
         msg += "Entry Address: 0x{0:08X}\n".format(self.entry_address)
@@ -655,11 +656,11 @@ def new_img(**kwargs):
         kwargs['image'] = EnumImageType.FIRMWARE
 
     if isinstance(kwargs['image'], str):
-        img_type = EnumImageType.value(kwargs['image'])
+        img_type = EnumImageType[kwargs['image']]
     else:
         img_type = kwargs['image']
 
-    if not EnumImageType.validate(img_type):
+    if not EnumImageType.is_valid(img_type):
         raise Exception()
 
     if img_type == EnumImageType.MULTI:
@@ -682,7 +683,7 @@ def parse_img(data, offset=0):
     """
     (img_type, offset) = get_img_type(bytearray(data), offset)
 
-    if not EnumImageType.validate(img_type):
+    if not EnumImageType.is_valid(img_type):
         raise Exception("Not a valid image type")
 
     if img_type == EnumImageType.MULTI:

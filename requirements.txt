@@ -1,2 +1,3 @@
 fdt>=0.1.2
 click>=5.0
+easy_enum>=0.1.0

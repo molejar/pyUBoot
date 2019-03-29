@@ -13,55 +13,7 @@
 # limitations under the License.
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Enum Class
-# ----------------------------------------------------------------------------------------------------------------------
-class Enum(object):
-    @classmethod
-    def validate(cls, value):
-        for item in cls._nfo:
-            if isinstance(value, str) and value == item[1]:
-                return True
-            elif value == item[0]:
-                return True
-        return False
-
-    @classmethod
-    def value(cls, name):
-        if not isinstance(name, str):
-            raise Exception("Item name must be a string type !")
-        for item in cls._nfo:
-            if name == item[1]:
-                return item[0]
-        raise ValueError("Unsupported name: %s" % name)
-
-    @classmethod
-    def all_values(cls):
-        return [item[0] for item in cls._nfo]
-
-    @classmethod
-    def name(cls, value):
-        for item in cls._nfo:
-            if value == item[0]:
-                return item[1]
-        return "0x{0:08X}".format(value)
-
-    @classmethod
-    def all_names(cls):
-        return [item[1] for item in cls._nfo]
-
-    @classmethod
-    def desc(cls, value):
-        for item in cls._nfo:
-            if isinstance(value, str) and value == item[1]:
-                return item[2]
-            elif value == item[0]:
-                return item[2]
-
-    @classmethod
-    def all_descs(cls):
-        return [item[3] for item in cls._nfo]
-# ----------------------------------------------------------------------------------------------------------------------
+from easy_enum import EEnum as Enum
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Image Types
@@ -103,75 +55,41 @@ class Enum(object):
 
 
 class EnumImageType(Enum):
-    """ Header: Supported UBoot Image Types """
-    STANDALONE = 1  # Standalone Image
-    KERNEL = 2  # Kernel Image
-    RAMDISK = 3  # RamDisk Image
-    MULTI = 4  # Multi-File Image
-    FIRMWARE = 5  # Firmware Image
-    SCRIPT = 6  # U-Boot Script Image
-    FILESYSTEM = 7  # Filesystem Image
-    FLATDT = 8  # Flat Device Tree Image
-    KWB = 9  # Kirkwood Boot Image
-    IMX = 10  # Freescale IMXBoot Image
-    UBL = 11  # Davinci UBL Image
-    OMAP = 12  # TI OMAP Config Header Image
-    AIS = 13  # TI Davinci IS Image
+    """ Supported UBoot Image Types """
 
-    KNOLOAD = 14  # OS Kernel Image, can run from any load address
-    PBL = 15  # Freescale PBL Boot Image
-    MXS = 16  # Freescale MXS Boot Image
-    GP = 17  # TI Keystone GP-Header Image
-    ATMEL = 18  # ATMEL ROM bootable Image
-    SOCFPGA = 19  # Altera SOCFPGA Preloader
-    X86SETUP = 20  # x86 setup.bin Image
-    LPC32XX = 21  # -
-    LOADABLE = 22  # A list of typeless images
-    RKBOOT = 23  # Rockchip Boot Image
-    RKSD = 24  # Rockchip SD card
-    RKSPI = 25  # Rockchip SPI image
-    ZYNQ = 26  # Xilinx Zynq Boot Image
-    ZYNQMP = 27  # Xilinx ZynqMP Boot Image
-    FPGA = 28  # FPGA Image
-    VYBRID = 29  # VYBRID.vyb Image
-    TEE = 30  # Trusted Execution Environment OS Image
-    FW_IVT = 31  # Firmware Image with HABv4 IVT
-    PMMC = 32  # TI Power Management Micro-Controller Firmware
+    STANDALONE = (1, "standalone", "Standalone Program")
+    KERNEL = (2, "kernel", "Kernel Image")
+    RAMDISK = (3, "ramdisk", "RAMDisk Image")
+    MULTI = (4, "multi", "Multi-File Image")
+    FIRMWARE = (5, "firmware", "Firmware Image")
+    SCRIPT = (6, "script", "U-Boot Script Image")
+    FILESYSTEM = (7, "filesystem", "Filesystem Image")
+    FLATDT = (8, "flat_dt", "Flat Device Tree Image")
+    KWB = (9, "kwbimage", "Kirkwood Boot Image")
+    IMX = (10, "imximage", "Freescale i.MX Boot Image")
+    UBL = (11, "ublimage", "Davinci UBL image")
+    OMAP = (12, "omapimage", "TI OMAP SPL With GP CH")
+    AIS = (13, "aisimage", "Davinci AIS image")
 
-    _nfo = (
-        # Flag  |  Name  | Description
-        (AIS, "aisimage", "Davinci AIS image"),
-        (FILESYSTEM, "filesystem", "Filesystem Image"),
-        (FIRMWARE, "firmware", "Firmware"),
-        (FLATDT, "flat_dt", "Flat Device Tree"),
-        (GP, "gpimage", "TI Keystone SPL Image"),
-        (KERNEL, "kernel", "Kernel Image"),
-        (KNOLOAD, "kernel_noload", "Kernel Image (no loading done)"),
-        (KWB, "kwbimage", "Kirkwood Boot Image"),
-        (IMX, "imximage", "Freescale i.MX Boot Image"),
-        (MULTI, "multi", "Multi-File Image"),
-        (OMAP, "omapimage", "TI OMAP SPL With GP CH"),
-        (PBL, "pblimage", "Freescale PBL Boot Image"),
-        (RAMDISK, "ramdisk", "RAMDisk Image"),
-        (SCRIPT, "script", "Script"),
-        (SOCFPGA, "socfpgaimage", "Altera SOCFPGA preloader"),
-        (STANDALONE, "standalone", "Standalone Program"),
-        (UBL, "ublimage", "Davinci UBL image"),
-        (MXS, "mxsimage", "Freescale MXS Boot Image"),
-        (ATMEL, "atmelimage", "ATMEL ROM-Boot Image"),
-        (X86SETUP, "x86_setup", "x86 setup.bin"),
-        (LPC32XX, "lpc32xximage", "LPC32XX Boot Image"),
-        (RKBOOT, "rkimage", "Rockchip Boot Image"),
-        (RKSD, "rksd", "Rockchip SD Boot Image"),
-        (RKSPI, "rkspi", "Rockchip SPI Boot Image"),
-        (VYBRID, "vybridimage", "Vybrid Boot Image"),
-        (ZYNQ, "zynqimage", "Xilinx Zynq Boot Image"),
-        (ZYNQMP, "zynqmpimage", "Xilinx ZynqMP Boot Image"),
-        (FPGA, "fpga", "FPGA Image"),
-        (TEE, "tee", "Trusted Execution Environment Image"),
-        (FW_IVT, "firmware_ivt", "Firmware with HABv4 IVT"),
-        (PMMC, "pmmc", "TI Power Management Micro-Controller Firmware"),
-    )
+    KNOLOAD = (14, "kernel_noload", "Kernel Image (no loading done)")
+    PBL = (15, "pblimage", "Freescale PBL Boot Image")
+    MXS = (16, "mxsimage", "Freescale MXS Boot Image")
+    GP = (17, "gpimage", "TI Keystone SPL Image")
+    ATMEL = (18, "atmelimage", "ATMEL ROM-Boot Image")
+    SOCFPGA = (19, "socfpgaimage", "Altera SOCFPGA preloader")
+    X86SETUP = (20, "x86_setup", "x86 setup.bin")
+    LPC32XX = (21, "lpc32xximage", "LPC32XX Boot Image")
+    LOADABLE = (22, "loadable", "A list of typeless images")
+    RKBOOT = (23, "rkimage", "Rockchip Boot Image")
+    RKSD = (24, "rksd", "Rockchip SD Boot Image")
+    RKSPI = (25, "rkspi", "Rockchip SPI Boot Image")
+    ZYNQ = (26, "zynqimage", "Xilinx Zynq Boot Image")
+    ZYNQMP = (27, "zynqmpimage", "Xilinx ZynqMP Boot Image")
+    FPGA = (28, "fpga", "FPGA Image")
+    VYBRID = (29, "vybridimage", "Vybrid Boot Image")
+    TEE = (30, "tee", "Trusted Execution Environment Image")
+    FW_IVT = (31, "firmware_ivt", "Firmware with HABv4 IVT")
+    PMMC = (32, "pmmc", "TI Power Management Micro-Controller Firmware")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -182,57 +100,32 @@ class EnumImageType(Enum):
 # Do not change values for backward compatibility.
 
 class EnumOsType(Enum):
-    """ Header: Supported Operating Systems """
-    OPENBSD = 1  # OpenBSD
-    NETBSD = 2  # NetBSD
-    FREEBSD = 3  # FreeBSD
-    BSD4 = 4  # 4-4BSD
-    LINUX = 5  # Linux
-    SVR4 = 6  # SVR4
-    ESIX = 7  # Esix
-    SOLARIS = 8  # Solaris
-    IRIX = 9  # Irix
-    SCO = 10  # SCO
-    DELL = 11  # Dell
-    NCR = 12  # NCR
-    LYNXOS = 13  # LynxOS
-    VXWORKS = 14  # VxWorks
-    PSOS = 15  # pSOS
-    QNX = 16  # QNX
-    UBOOT = 17  # Firmware
-    RTEMS = 18  # RTEMS
-    ARTOS = 19  # ARTOS
-    UNITY = 20  # Unity OS
-    INTEGRITY = 21  # INTEGRITY
-    OSE = 22  # OSE
-    PLAN9 = 23  # Plan 9
-    OPENRTOS = 24  # OpenRTOS
+    """ Supported Operating Systems """
 
-    _nfo = (
-        # Flag  |  Name  | Description
-        (LINUX, "linux", "Linux"),
-        (LYNXOS, "lynxos", "LynxOS"),
-        (NETBSD, "netbsd", "NetBSD"),
-        (OSE, "ose", "Enea OSE"),
-        (PLAN9, "plan9", "Plan 9"),
-        (RTEMS, "rtems", "RTEMS"),
-        (UBOOT, "u-boot", "U-Boot"),
-        (VXWORKS, "vxworks", "VxWorks"),
-        (QNX, "qnx", "QNX"),
-        (INTEGRITY, "integrity", "INTEGRITY"),
-        (BSD4, "4-4bsd", "4-4BSD"),
-        (DELL, "dell", "Dell"),
-        (ESIX, "esix", "Esix"),
-        (FREEBSD, "freebsd", "FreeBSD"),
-        (IRIX, "irix", "Irix"),
-        (NCR, "ncr", "NCR"),
-        (OPENBSD, "openbsd", "OpenBSD"),
-        (PSOS, "psos", "pSOS"),
-        (SCO, "sco", "SCO"),
-        (SOLARIS, "solaris", "Solaris"),
-        (SVR4, "svr4", "SVR4"),
-        (OPENRTOS, "openrtos", "OpenRTOS"),
-    )
+    OPENBSD = (1, "openbsd", "OpenBSD")
+    NETBSD = (2, "netbsd", "NetBSD")
+    FREEBSD = (3, "freebsd", "FreeBSD")
+    BSD4 = (4, "4-4bsd", "4-4BSD")
+    LINUX = (5, "linux", "Linux")
+    SVR4 = (6, "svr4", "SVR4")
+    ESIX = (7, "esix", "Esix")
+    SOLARIS = (8, "solaris", "Solaris")
+    IRIX = (9, "irix", "Irix")
+    SCO = (10, "sco", "SCO")
+    DELL = (11, "dell", "Dell")
+    NCR = (12, "ncr", "NCR")
+    LYNXOS = (13, "lynxos", "LynxOS")
+    VXWORKS = (14, "vxworks", "VxWorks")
+    PSOS = (15, "psos", "pSOS")
+    QNX = (16, "qnx", "QNX")
+    UBOOT = (17, "u-boot", "U-Boot Firmware")
+    RTEMS = (18, "rtems", "RTEMS")
+    ARTOS = (19, "artos", "ARTOS")
+    UNITY = (20, "unity", "Unity OS")
+    INTEGRITY = (21, "integrity", "INTEGRITY")
+    OSE = (22, "ose", "Enea OSE")
+    PLAN9 = (23, "plan9", "Plan 9")
+    OPENRTOS = (24, "openrtos", "OpenRTOS")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -243,60 +136,33 @@ class EnumOsType(Enum):
 # Do not change values for backward compatibility.
 
 class EnumArchType(Enum):
-    """ Header: Supported CPU Architectures """
-    ALPHA = 1  # Alpha
-    ARM = 2  # ARM
-    I386 = 3  # Intel x86
-    IA64 = 4  # IA64
-    MIPS = 5  # MIPS
-    MIPS64 = 6  # MIPS 64 Bit
-    PPC = 7  # PowerPC
-    S390 = 8  # IBM S390
-    SH = 9  # SuperH
-    SPARC = 10  # Sparc
-    SPARC64 = 11  # Sparc 64 Bit
-    M68K = 12  # M68K
-    NIOS = 13  # Nios - 32
-    MICROBLAZE = 14  # MicroBlaze
-    NIOS2 = 15  # Nios - II
-    BLACKFIN = 16  # Blackfin
-    AVR32 = 17  # AVR32
-    ST200 = 18  # STMicroelectronics ST200
-    SANDBOX = 19  # Sandbox architecture (test only)
-    NDS32 = 20  # ANDES Technology - NDS32
-    OPENRISC = 21  # OpenRISC 1000
-    ARM64 = 22  # ARM64
-    ARC = 23  # Synopsis DesignWare ARC
-    X86_64 = 24  # AMD x86_64, Intel and Via
-    XTENSA = 25  # Xtensa
+    """ Supported CPU Architectures """
 
-    _nfo = (
-        # Flag  |   Name   | Description
-        (ALPHA, "alpha", "Alpha"),
-        (ARM, "arm", "ARM"),
-        (I386, "x86", "Intel x86"),
-        (IA64, "ia64", "IA64"),
-        (M68K, "m68k", "M68K"),
-        (MICROBLAZE, "microblaze", "MicroBlaze"),
-        (MIPS, "mips", "MIPS"),
-        (MIPS64, "mips64", "MIPS 64-Bit"),
-        (NIOS2, "nios2", "NIOS II"),
-        (PPC, "powerpc", "PowerPC"),
-        (PPC, "ppc", "PowerPC"),
-        (S390, "s390", "IBM S390"),
-        (SH, "sh", "SuperH"),
-        (SPARC, "sparc", "SPARC"),
-        (SPARC64, "sparc64", "SPARC 64 Bit"),
-        (BLACKFIN, "blackfin", "Blackfin"),
-        (AVR32, "avr32", "AVR32"),
-        (NDS32, "nds32", "NDS32"),
-        (OPENRISC, "or1k", "OpenRISC 1000"),
-        (SANDBOX, "sandbox", "Sandbox"),
-        (ARM64, "arm64", "AArch64"),
-        (ARC, "arc", "ARC"),
-        (X86_64, "x86_64", "AMD x86_64"),
-        (XTENSA, "xtensa", "Xtensa"),
-    )
+    ALPHA = (1, "alpha", "Alpha")
+    ARM = (2, "arm", "ARM")
+    I386 = (3, "x86", "Intel x86")
+    IA64 = (4, "ia64", "IA64")
+    MIPS = (5, "mips", "MIPS")
+    MIPS64 = (6, "mips64", "MIPS 64-Bit")
+    PPC = (7, "powerpc", "PowerPC")
+    S390 = (8, "s390", "IBM S390")
+    SH = (9, "sh", "SuperH")
+    SPARC = (10, "sparc", "SPARC")
+    SPARC64 = (11, "sparc64", "SPARC 64 Bit")
+    M68K = (12, "m68k", "M68K")
+    NIOS = (13, "nios", "Nios 32")
+    MICROBLAZE = (14, "microblaze", "MicroBlaze")
+    NIOS2 = (15, "nios2", "NIOS II")
+    BLACKFIN = (16, "blackfin", "Blackfin")
+    AVR32 = (17, "avr32", "AVR32")
+    ST200 = (18, "ST200", "STMicroelectronics ST200")
+    SANDBOX = (19, "sandbox", "Sandbox architecture (test only)")
+    NDS32 = (20, "nds32", "ANDES Technology - NDS32")
+    OPENRISC = (21, "or1k", "OpenRISC 1000")
+    ARM64 = (22, "arm64", "AArch64")
+    ARC = (23, "arc", "Synopsis DesignWare ARC")
+    X86_64 = (24, "x86_64", "AMD x86_64, Intel and Via")
+    XTENSA = (25, "xtensa", "Xtensa")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -307,20 +173,11 @@ class EnumArchType(Enum):
 # Do not change values for backward compatibility.
 
 class EnumCompressionType(Enum):
-    """ Header: Supported Data Compression """
-    NONE = 0
-    GZIP = 1
-    BZIP2 = 2
-    LZMA = 3
-    LZO = 4
-    LZ4 = 5
+    """ Supported Data Compression """
 
-    _nfo = (
-        # Flag  |  Name  | Description
-        (NONE, "none", "uncompressed"),
-        (GZIP, "gzip", "gzip compressed"),
-        (BZIP2, "bzip2", "bzip2 compressed"),
-        (LZMA, "lzma", "lzma compressed"),
-        (LZO, "lzo", "lzo compressed"),
-        (LZ4, "lz4", "lz4 compressed"),
-    )
+    NONE = (0, 'none', 'Uncompressed')
+    GZIP = (1, 'gzip', 'Compressed with GZIP')
+    BZIP2 = (2, 'bzip2', 'Compressed with BZIP2')
+    LZMA = (3, 'lzma', 'Compressed with LZMA')
+    LZO = (4, 'lzo', 'Compressed with LZO')
+    LZ4 = (5, 'lz4', 'Compressed with LZ4')

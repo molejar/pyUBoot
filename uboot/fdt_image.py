@@ -94,13 +94,13 @@ class FdtImage(object):
 
         for p in nfo.props:
             name, value = p.name, p[0]
-            if name == "type" and value != "flat_dt" and not EnumImageType.validate(value):
+            if name == "type" and value != "flat_dt" and not EnumImageType.is_valid(value):
                 raise Exception("Unknown IMAGE type")
-            elif name == "os" and not EnumOsType.validate(value):
+            elif name == "os" and not EnumOsType.is_valid(value):
                 raise Exception("Unknown OS type")
-            elif name == "arch" and not EnumArchType.validate(value):
+            elif name == "arch" and not EnumArchType.is_valid(value):
                 raise Exception("Unknown ARCH type")
-            elif name == "compression" and not EnumCompressionType.validate(value):
+            elif name == "compression" and not EnumCompressionType.is_valid(value):
                 raise Exception("Unknown Compression type")
 
         self.img_info.append(nfo)

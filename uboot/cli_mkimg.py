@@ -51,10 +51,10 @@ class UInt(click.ParamType):
 UINT = UInt()
 
 # --
-ARCT = uboot.EnumArchType.all_names()
-OST  = uboot.EnumOsType.all_names()
-IMGT = uboot.EnumImageType.all_names()
-COMT = uboot.EnumCompressionType.all_names()
+ARCT = [item[0] for item in uboot.EnumArchType]
+OST  = [item[0] for item in uboot.EnumOsType]
+IMGT = [item[0] for item in uboot.EnumImageType]
+COMT = [item[0] for item in uboot.EnumCompressionType]
 
 
 # U-Boot mkimg: Base options
@@ -80,7 +80,7 @@ def info(file):
 
 @cli.command(short_help="Show new image content")
 @click.argument('file', nargs=1, type=click.Path(exists=True))
-def info_itb(file):
+def infoitb(file):
     """ List new image content in readable format """
     try:
         with open(file, 'rb') as f:
@@ -105,7 +105,7 @@ def info_itb(file):
 def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infiles):
     """ Create old U-Boot image from attached files """
     try:
-        img_type = uboot.EnumImageType.value(imgtype)
+        img_type = uboot.EnumImageType[imgtype]
 
         if img_type == uboot.EnumImageType.MULTI:
             img = uboot.MultiImage
@@ -124,9 +124,9 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
             with open(infiles[0], 'rb') as f:
                 img.data = bytearray(f.read())
 
-        img.header.arch_type = uboot.EnumArchType.value(arch)
-        img.header.os_type = uboot.EnumOsType.value(ostype)
-        img.header.compression = uboot.EnumCompressionType.value(compress)
+        img.header.arch_type = uboot.EnumArchType[arch]
+        img.header.os_type = uboot.EnumOsType[ostype]
+        img.header.compression = uboot.EnumCompressionType[compress]
         img.header.load_address = laddr
         img.header.entry_point = epaddr
         img.header.name = name
@@ -148,7 +148,7 @@ def create(arch, ostype, imgtype, compress, laddr, epaddr, name, outfile, infile
 @click.option('-a', '--align', type=UINT, default=None, help="Make the blob align to the <bytes>")
 @click.option('-s', '--size', type=UINT, default=None, help="Make the blob at least <bytes> long")
 @click.argument('itsfile',  nargs=1, type=click.Path(exists=True))
-def create_itb(outfile, padding, align, size, itsfile):
+def createitb(outfile, padding, align, size, itsfile):
     """ Create new U-Boot image from *.its file """
 
     try:
@@ -213,7 +213,7 @@ def extract(file):
 
 @cli.command(short_help="Extract content from new U-Boot image")
 @click.argument('file',  nargs=1, type=click.Path(exists=True))
-def extract_itb(file):
+def extractitb(file):
     """ Extract content from new U-Boot image """
 
     try:

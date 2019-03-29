@@ -19,11 +19,11 @@ $ Usage: mkimg [OPTIONS] COMMAND [ARGS]...
 
  Commands:
    create       Create old U-Boot image from attached files
-   create_itb   Create new U-Boot image from *.its file
+   createitb    Create new U-Boot image from *.its file
    extract      Extract content from old U-Boot image
-   extract_itb  Extract content from new U-Boot image
+   extractitb   Extract content from new U-Boot image
    info         Show old image content
-   info_itb     Show new image content
+   infoitb      Show new image content
 ```
 
 ## Commands for old U-Boot images
@@ -102,14 +102,14 @@ $ mkimg create -a arm -o linux -i script -c none script.bin script.txt
 
 ## Commands for new FDT U-Boot images
 
-#### $ mkimg info_itb FILE
+#### $ mkimg infoitb FILE
 
 List new U-Boot image content in readable format
 
 ##### Example:
 
 ```sh
-$ mkimg info_itb image.itb
+$ mkimg infoitb image.itb
 
 FIT description: i.MX7D U-Boot Image
 Created:         Fri May 11 21:51:14 2018
@@ -137,7 +137,7 @@ Default config:  config@1
 
 <br>
 
-#### $ mkimg create_itb [OPTIONS] FILE
+#### $ mkimg createitb [OPTIONS] FILE
 
 Create new U-Boot image from *.its file 
 
@@ -151,21 +151,21 @@ Create new U-Boot image from *.its file
 ##### Example:
 
 ```sh
-$ mkimg create_itb image.its
+$ mkimg createitb image.its
 
  Created Image: image.itb
 ```
 
 <br>
 
-#### $ mkimg extract_itb FILE
+#### $ mkimg extractitb FILE
 
 Extract content from new U-Boot image (*.itb)
 
 ##### Example:
 
 ```sh
-$ mkimg extract_itb image.itb
+$ mkimg extractitb image.itb
 
  Image extracted into dir: image.itb.ex
 ```

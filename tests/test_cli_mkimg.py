@@ -57,17 +57,17 @@ def test_mkimg_extract(script_runner):
 
 @pytest.mark.script_launch_mode('subprocess')
 def test_mkimg_create_itb(script_runner):
-    ret = script_runner.run('mkimg', 'create_itb', '-o', UBOOT_ITB_TEMP, UBOOT_ITS)
+    ret = script_runner.run('mkimg', 'createitb', '-o', UBOOT_ITB_TEMP, UBOOT_ITS)
     assert ret.success
 
 
 @pytest.mark.script_launch_mode('subprocess')
 def test_mkimg_info_itb(script_runner):
-    ret = script_runner.run('mkimg', 'info_itb', UBOOT_ITB_TEMP)
+    ret = script_runner.run('mkimg', 'infoitb', UBOOT_ITB_TEMP)
     assert ret.success
 
 
 @pytest.mark.script_launch_mode('subprocess')
 def test_mkimg_extract_itb(script_runner):
-    ret = script_runner.run('mkimg', 'extract_itb', UBOOT_ITB_TEMP)
+    ret = script_runner.run('mkimg', 'extractitb', UBOOT_ITB_TEMP)
     assert ret.success
