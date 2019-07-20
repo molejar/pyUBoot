@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from easy_enum import EEnum as Enum
+from easy_enum import Enum
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Image Types

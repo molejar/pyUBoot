@@ -94,13 +94,13 @@ class FdtImage(object):
 
         for p in nfo.props:
             name, value = p.name, p[0]
-            if name == "type" and value != "flat_dt" and not EnumImageType.is_valid(value):
+            if name == "type" and value != "flat_dt" and value not in EnumImageType:
                 raise Exception("Unknown IMAGE type")
-            elif name == "os" and not EnumOsType.is_valid(value):
+            elif name == "os" and value not in EnumOsType:
                 raise Exception("Unknown OS type")
-            elif name == "arch" and not EnumArchType.is_valid(value):
+            elif name == "arch" and value not in EnumArchType:
                 raise Exception("Unknown ARCH type")
-            elif name == "compression" and not EnumCompressionType.is_valid(value):
+            elif name == "compression" and value not in EnumCompressionType:
                 raise Exception("Unknown Compression type")
 
         self.img_info.append(nfo)
@@ -274,7 +274,7 @@ def parse_itb(data, offset=0):
         elif img.exist_property("data-size") and img.exist_property("data-position"):
             data_size = get_value(img, "data-size")
             data_offset = get_value(img, "data-position")
-            img_data = data[offset + data_offset : offset + data_offset + data_size]
+            img_data = data[offset + data_offset: offset + data_offset + data_size]
             img.remove_property("data-size")
             img.remove_property("data-position")
         else:

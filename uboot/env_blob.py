@@ -88,7 +88,7 @@ class EnvBlob(object):
         """
         if name:
             assert isinstance(name, str), "name is not a string: %r" % name
-            if not name in self._env:
+            if name not in self._env:
                 raise Exception("ERROR: Env %s doesnt exist !" % name)
             return self._env[name]
         else:

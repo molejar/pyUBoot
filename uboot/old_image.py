@@ -61,8 +61,8 @@ class Header(object):
 
     @os_type.setter
     def os_type(self, value):
-        assert EnumOsType.is_valid(value), "HEADER: Unknown Value of OS Type: %d" % value
-        self._os_type = int(value)
+        assert value in EnumOsType, "HEADER: Unknown Value of OS Type: %d" % value
+        self._os_type = value
 
     @property
     def arch_type(self):
@@ -70,8 +70,8 @@ class Header(object):
 
     @arch_type.setter
     def arch_type(self, value):
-        assert EnumArchType.is_valid(value), "HEADER: Unknown Value of Arch Type: %d" % value
-        self._arch_type = int(value)
+        assert value in EnumArchType, "HEADER: Unknown Value of Arch Type: %d" % value
+        self._arch_type = value
 
     @property
     def image_type(self):
@@ -79,8 +79,8 @@ class Header(object):
 
     @image_type.setter
     def image_type(self, value):
-        assert EnumImageType.is_valid(value), "HEADER: Unknown Value of Image Type: %d" % value
-        self._image_type = int(value)
+        assert value in EnumImageType, "HEADER: Unknown Value of Image Type: %d" % value
+        self._image_type = value
 
     @property
     def compression(self):
@@ -88,8 +88,8 @@ class Header(object):
 
     @compression.setter
     def compression(self, value):
-        assert EnumCompressionType.is_valid(value), "HEADER: Unknown Value of Compression Type: %d" % value
-        self._compression = int(value)
+        assert value in EnumCompressionType, "HEADER: Unknown Value of Compression Type: %d" % value
+        self._compression = value
 
     @property
     def name(self):
@@ -97,7 +97,7 @@ class Header(object):
 
     @name.setter
     def name(self, value):
-        assert type(value) is str, "HEADER: Name must be a string"
+        assert isinstance(value, str), "HEADER: Name must be a string"
         assert len(value) <= 32, "HEADER: Name to long: %d char instead 32" % len(value)
         self._name = value
 
@@ -407,8 +407,8 @@ class ScriptImage(BaseImage):
         return msg
 
     def append(self, cmd_name, cmd_value):
-        assert type(cmd_name) is str, "ScriptImage: Command name must be a string"
-        assert type(cmd_value) is str, "ScriptImage: Command value must be a string"
+        assert isinstance(cmd_name, str), "ScriptImage: Command name must be a string"
+        assert isinstance(cmd_value, str), "ScriptImage: Command value must be a string"
         self._cmds.append([cmd_name, cmd_value])
 
     def pop(self, index):
@@ -660,8 +660,8 @@ def new_img(**kwargs):
     else:
         img_type = kwargs['image']
 
-    if not EnumImageType.is_valid(img_type):
-        raise Exception()
+    if img_type not in EnumImageType:
+        raise Exception("Not a valid image type")
 
     if img_type == EnumImageType.MULTI:
         img_obj = MultiImage(**kwargs)
@@ -683,7 +683,7 @@ def parse_img(data, offset=0):
     """
     (img_type, offset) = get_img_type(bytearray(data), offset)
 
-    if not EnumImageType.is_valid(img_type):
+    if img_type not in EnumImageType:
         raise Exception("Not a valid image type")
 
     if img_type == EnumImageType.MULTI:

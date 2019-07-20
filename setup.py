@@ -41,7 +41,11 @@ setup(
     description='Open Source library for manipulating with U-Boot images and environment variables',
     long_description=long_description(),
     python_requires='>=3.6',
-    install_requires=['click>=5.0', 'fdt>=0.1.2'],
+    install_requires=[
+        'fdt==0.1.2',
+        'click==7.0',
+        'easy_enum==0.2.0'
+    ],
     packages=['uboot'],
     classifiers=[
         'Programming Language :: Python :: 3',
