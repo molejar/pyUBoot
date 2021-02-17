@@ -199,7 +199,7 @@ class Header(object):
                     self.name.encode('utf-8'))
 
     @classmethod
-    def parse(cls, data, offset=0):
+    def parse(cls, data, offset=0, ignore_crc=False):
         if len(data) < cls.SIZE:
             raise Exception("Header: Too small size of input data !")
 
@@ -217,13 +217,14 @@ class Header(object):
         header.arch_type = val[8]
         header.image_type = val[9]
         header.compression = val[10]
-        header.name = val[11].decode('utf-8').strip('\0')
+        header.name = val[11].decode('utf-8', errors='ignore').strip('\0')
 
         if header.magic_number != header.MAGIC_NUMBER:
             raise Exception("Header: Magic number not valid !")
 
-        if header_crc != header.header_crc:
-            raise Exception("Header: Uncorrect CRC of input data !")
+        if not ignore_crc:
+            if header_crc != header.header_crc:
+                raise Exception(f"Header: Uncorrect CRC of input data ! {hex(header_crc)} != {hex(header.header_crc)}")
 
         return header
 # ----------------------------------------------------------------------------------------------------------------------
@@ -308,20 +309,22 @@ class StdImage(BaseImage):
         return self.header.export() + self.data
 
     @classmethod
-    def parse(cls, data, offset=0):
+    def parse(cls, data, offset=0, ignore_crc=False):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
+            :param ignore_crc: ignore crc errors
         """
         img = cls()
-        img.header = Header.parse(data, offset)
+        img.header = Header.parse(data, offset, ignore_crc)
         offset += img.header.size
         if len(data[offset:]) < img.header.data_size:
             raise Exception("Image: Too small size of input data !")
 
         img.data = data[offset:offset + img.header.data_size]
         if CRC32(img.data) != img.header.data_crc:
-            raise Exception("Image: Uncorrect CRC of input data ")
+            if not ignore_crc:
+                raise Exception("Image: Uncorrect CRC of input data ")
 
         return img
 
@@ -461,20 +464,22 @@ class ScriptImage(BaseImage):
         return self.header.export() + data
 
     @classmethod
-    def parse(cls, data, offset=0):
+    def parse(cls, data, offset=0, ignore_crc=False):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
+            :param ignore_crc: ignore crc errors
         """
         img = cls()
-        img.header = Header.parse(data, offset)
+        img.header = Header.parse(data, offset, ignore_crc)
         offset += img.header.size
         if len(data[offset:]) < img.header.data_size:
             raise Exception("Image: Too small size of input data !")
 
         data = data[offset:offset + img.header.data_size]
         if CRC32(data) != img.header.data_crc:
-            raise Exception("Image: Uncorrect CRC of input data ")
+            if not ignore_crc:
+                raise Exception("Image: Uncorrect CRC of input data ")
 
         # TODO: Check image format for script type
         size = unpack_from('!2L', data)[0]
@@ -588,20 +593,22 @@ class MultiImage(BaseImage):
         return self.header.export() + data
 
     @classmethod
-    def parse(cls, data, offset=0):
+    def parse(cls, data, offset=0, ignore_crc=False):
         """ Load the image from byte array.
             :param data:   The raw image as byte array
             :param offset: The offset of input data
+            :param ignore_crc: ignore crc errors
         """
         img = cls()
-        img.header = Header.parse(data, offset)
+        img.header = Header.parse(data, offset, ignore_crc)
         offset += img.header.size
 
         if len(data[offset:]) < img.header.data_size:
             raise Exception("MultiImage: Too small size of input data !")
 
         if CRC32(data[offset:offset + img.header.data_size]) != img.header.data_crc:
-            raise Exception("MultiImage: Uncorrect CRC of input data !")
+            if not ignore_crc:
+                raise Exception("MultiImage: Uncorrect CRC of input data !")
 
         if img.header.image_type != EnumImageType.MULTI:
             raise Exception("MultiImage: Not a Multi Image Type !")
@@ -623,7 +630,7 @@ class MultiImage(BaseImage):
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def get_img_type(data, offset=0):
+def get_img_type(data, offset=0, ignore_crc=False):
     """ Help function for extracting image fom raw data
     :param data: The raw data as byte array
     :param offset: The offset
@@ -631,14 +638,17 @@ def get_img_type(data, offset=0):
     """
     while True:
         if (offset + Header.SIZE) > len(data):
-            raise Exception("Not an U-Boot image !")
+            raise Exception(f"Not an U-Boot image ! {(offset + Header.SIZE)} > {len(data)}")
 
         (header_mn, header_crc,) = unpack_from('!2L', data, offset)
         # Check the magic number if is U-Boot image
         if header_mn == Header.MAGIC_NUMBER:
             header = bytearray(data[offset:offset+Header.SIZE])
             header[4:8] = [0]*4
-            if header_crc == CRC32(header):
+            if not ignore_crc:
+                if header_crc == CRC32(header):
+                    break
+            else:
                 break
         offset += 4
 
@@ -675,25 +685,26 @@ def new_img(**kwargs):
     return img_obj
 
 
-def parse_img(data, offset=0):
+def parse_img(data, offset=0, ignore_crc=False):
     """ Help function for extracting image fom raw data
     :param data: The raw data as byte array
     :param offset: The offset
+    :param ignore_crc: Ignore CRC mismatches
     :return: Image object
     """
-    (img_type, offset) = get_img_type(bytearray(data), offset)
+    (img_type, offset) = get_img_type(bytearray(data), offset, ignore_crc)
 
     if img_type not in EnumImageType:
         raise Exception("Not a valid image type")
 
     if img_type == EnumImageType.MULTI:
-        img = MultiImage.parse(data, offset)
+        img = MultiImage.parse(data, offset, ignore_crc)
     elif img_type == EnumImageType.FIRMWARE:
-        img = FwImage.parse(data, offset)
+        img = FwImage.parse(data, offset, ignore_crc)
     elif img_type == EnumImageType.SCRIPT:
-        img = ScriptImage.parse(data, offset)
+        img = ScriptImage.parse(data, offset, ignore_crc)
     else:
-        img = StdImage.parse(data, offset)
+        img = StdImage.parse(data, offset, ignore_crc)
         img.header.image_type = img_type
 
     return img

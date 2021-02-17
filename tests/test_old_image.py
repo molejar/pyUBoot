@@ -35,7 +35,7 @@ def teardown_module(module):
     os.remove(UBOOT_IMG_TEMP)
 
 
-def test_01():
+def test_01_multi_file_image():
     # --------------------------------------------------------------------------------
     # create dummy firmware image (u-boot executable image)
     # --------------------------------------------------------------------------------
@@ -94,3 +94,56 @@ def test_01():
 
     # check if are identical
     assert mimg == img
+
+def test_02_funky_chars_in_name():
+    # --------------------------------------------------------------------------------
+    # create dummy firmware image (u-boot executable image)
+    # --------------------------------------------------------------------------------
+    fwimg = uboot.StdImage(bytes([1] * 16),
+                           name=str('\x03\x00\x00\x04\x52\x54\x2d\x41\x43\x35\x35\x55\x48\x50\x00\x00\x00\x00\x00\xa9'),
+                           laddr=0,
+                           eaddr=0,
+                           arch=uboot.EnumArchType.ARM,
+                           os=uboot.EnumOsType.LINUX,
+                           image=uboot.EnumImageType.FIRMWARE,
+                           compress=uboot.EnumCompressionType.NONE)
+
+       # --------------------------------------------------------------------------------
+    # save created image into file: uboot_mimg.img
+    # --------------------------------------------------------------------------------
+    with open(UBOOT_IMG_TEMP, "wb") as f:
+        f.write(fwimg.export())
+
+    # --------------------------------------------------------------------------------
+    # open and read image file: uboot_mimg.img
+    # --------------------------------------------------------------------------------
+    with open(UBOOT_IMG_TEMP, "rb") as f:
+        data = f.read()
+
+    # --------------------------------------------------------------------------------
+    # parse binary data into new img object of specific image type
+    # --------------------------------------------------------------------------------
+    img = uboot.parse_img(data)
+    # check if are identical
+    assert fwimg == img
+
+
+def test_03_bad_crc():
+    bad_crc_image = b'\x27\x05\x19\x56\x4F\x7c\x89\x60\x60\x2d\xa6\xec\x00\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x0b\xcd\x6a\xaf\x05\x02\x05\x00\x03\x00\x00\x04\x52\x54\x2d\x41\x43\x35\x35\x55\x48\x50\x00\x00\x00\x00\x00\xc2\xa9\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+
+    # --------------------------------------------------------------------------------
+    # parse binary data into new img object of specific image type
+    # --------------------------------------------------------------------------------
+    try:
+        img = uboot.parse_img(bad_crc_image)
+    except Exception:
+        pass
+    else:
+        assert False, 'Expected Exception when reading header with bad CRC'
+
+
+    # Don't expect an error
+    img = uboot.parse_img(bad_crc_image, ignore_crc=True)
+    expected_data = bytes([1] * 64)
+    assert img.data == expected_data, "Data wasn't correct"
+
