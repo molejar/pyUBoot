@@ -191,7 +191,7 @@ def extract(file):
             n = 0
             for simg in img:
                 with open(os.path.join(dest_dir, 'image_{0:02d}.bin'.format(n)), 'wb') as f:
-                    f.write(simg.eport())
+                    f.write(simg.export())
                 n += 1
         elif img.header.image_type == uboot.EnumImageType.SCRIPT:
             with open(os.path.join(dest_dir, 'script.txt'), 'w') as f:
