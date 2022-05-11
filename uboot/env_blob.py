@@ -163,7 +163,7 @@ class EnvBlob(object):
         if read_crc != calc_crc:
             raise ValueError("Wrong CRC")
 
-        read_data = read_data.decode('utf-8')
+        read_data = read_data.decode('utf-8', errors='ignore')
 
         for s in read_data.split('\0'):
             if not s or s.startswith('\xFF') or s.startswith('\x00'):
@@ -192,9 +192,8 @@ class EnvBlob(object):
 
         if len(data) > env_size:
             raise Exception("ERROR: ENV size out of range, extend required size !")
-
-        env_blob = data + chr(self._empty_value) * (env_size - len(data))
-        env_blob = env_blob.encode('utf-8')
+        env_blob = data.encode('utf-8')
+        env_blob += self._empty_value.to_bytes(1,'little') * (env_size - len(data))
         crc = binascii.crc32(env_blob) & 0xffffffff
 
         fmt = ">I" if self._bigendian else "<I"
