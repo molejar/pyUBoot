@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import time
-import zlib
+import binascii
 from struct import pack, unpack_from, calcsize
 
 from .common import EnumArchType, EnumOsType, EnumImageType, EnumCompressionType
@@ -27,7 +27,7 @@ def CRC32(data):
     :param data: Tha data blob as byte array
     :return: CRC Value
     """
-    return zlib.crc32(data) & 0xFFFFFFFF
+    return binascii.crc32(data) & 0xFFFFFFFF
 # ----------------------------------------------------------------------------------------------------------------------
 
 
