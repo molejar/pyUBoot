@@ -136,19 +136,16 @@ class FdtImage(object):
             images.append(img_clone)
             data[img_name] = self.img_data[img.name]
 
-        # Check default config
-        if self.def_config is None:
-            raise Exception("Default config not defined")
-        if self.def_config not in [cnf.name for cnf in self.configs]:
-            raise Exception("Default config \"{}\" doesn't exist".format(self.def_config))
 
         # Add images and configs
         root_node = fdt.Node('/')
         root_node.append(fdt.PropStrings("description", self.description))
         root_node.append(images)
-        configs = fdt.Node("configurations", nodes=self.configs)
-        configs.append(fdt.PropStrings("default", self.def_config))
-        root_node.append(configs)
+        if len(self.configs) != 0:
+            configs = fdt.Node("configurations", nodes=self.configs)
+            if self.def_config is not None and self.def_config in [cnf.name for cnf in self.configs]:
+                configs.append(fdt.PropStrings("default", self.def_config))
+            root_node.append(configs)
 
         # Crete ITS
         its = "/dts-v1/;\n"
@@ -188,18 +185,14 @@ class FdtImage(object):
             node.append(cimg)
         fdt_obj.add_item(node)
 
-        # Check default config
-        if self.def_config is None:
-            raise Exception("Default config not defined")
-        if self.def_config not in [cnf.name for cnf in self.configs]:
-            raise Exception("Default config \"{}\" doesn't exist".format(self.def_config))
-
         # Add configs
-        node = fdt.Node("configurations")
-        node.append(fdt.PropStrings("default", self.def_config))
-        for cfg in self.configs:
-            node.append(cfg)
-        fdt_obj.add_item(node)
+        if len(self.configs) != 0:
+            node = fdt.Node("configurations")
+            if self.def_config is not None and self.def_config in [cnf.name for cnf in self.configs]:
+                node.append(fdt.PropStrings("default", self.def_config))
+            for cfg in self.configs:
+                node.append(cfg)
+            fdt_obj.add_item(node)
 
         # Generate FDT blob
         itb = fdt_obj.to_dtb(17)
@@ -239,13 +232,14 @@ def parse_its(text, root_dir=''):
         img.remove_property("data")
         fim_obj.add_img(img, img_data)
 
-    # Parse configs
-    node = its_obj.get_node("configurations")
-    if node is None or not node.nodes:
-        raise Exception("parse_its: configurations not defined")
-    for cfg in node.nodes:
-        fim_obj.add_cfg(cfg, True)
-    fim_obj.def_config = get_value(node, "default")
+    # Parse configs if exists
+    try:
+        node = its_obj.get_node("configurations")
+        for cfg in node.nodes:
+            fim_obj.add_cfg(cfg, True)
+        fim_obj.def_config = get_value(node, "default")
+    except ValueError:
+        pass
 
     return fim_obj
 
@@ -281,12 +275,13 @@ def parse_itb(data, offset=0):
             raise Exception()
         fim_obj.add_img(img, img_data)
 
-    # Parse configs
-    node = fdt_obj.get_node("configurations")
-    if node is None or not node.nodes:
-        raise Exception("parse_itb: configurations not defined")
-    for cfg in node.nodes:
-        fim_obj.add_cfg(cfg, True)
-    fim_obj.def_config = get_value(node, "default")
+    # Parse configs if exists
+    try:
+        node = fdt_obj.get_node("configurations")
+        for cfg in node.nodes:
+            fim_obj.add_cfg(cfg, True)
+        fim_obj.def_config = get_value(node, "default")
+    except ValueError:
+        pass
 
     return fim_obj
